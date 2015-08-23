@@ -35,9 +35,3 @@ class BondBase:
             wp.close()
         except Exception, e:
             print 'Failed to retrieve data from wind for ' + self.id
-
-
-    def initFromDB(self, conn, asOfDate = None):
-        if type(conn) is not MySQLdb.connection:
-            raise TypeError('Unknown type. Supposed to be initialized from MySQL DB')
-        pass
