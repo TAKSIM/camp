@@ -18,6 +18,10 @@ class Instrument:
     def Price(self, asOfDate):
         raise NotImplementedError('Pricing method has not been implemented')
 
+class Deposite(Instrument):
+    def __init__(self, counterparty, maturityDate, ccy = Ccy.CNY):
+        Instrument.__init__(self, counterparty.id, InstType.DEPOSITE, ccy, True, maturityDate)
+
 class Deal:
     def __init__(self, inst, tradeDate, amount, tradePrice, book, trader, settleDate=None, maturityDate=None):
         self.inst = inst
@@ -38,13 +42,16 @@ class Deal:
     def Price(self, asOfDate):
         return self.inst.Price(asOfDate) * self.amount
 
+    def Cost(self):
+        return self.amount * self.tradePrice
+
     def IsLive(self, asOfDate):
         if asOfDate<=self.tradeDate:
             return False
         else:
             return self.maturityDate is None or self.maturityDate <= asOfDate
 
-    def Book(self, dbconn):
+    def OpenTrade(self, dbconn):
         cursor = dbconn.cursor()
         try:
             cursor.execute("""INSERT INTO TRADES VALUES (%s,%s,%s,%s,%s,%s,%s,%s)""",(self.id,self.book.id,self.tradeDate.isoformat(),self.settleDate.isoformat(),self.inst.id,self.amount,self.tradePrice,self.trader))
@@ -53,3 +60,20 @@ class Deal:
             print e.message
             dbconn.rollback()
         cursor.close()
+
+class Position:
+    def __init__(self, lastUpdate, pos):
+        self.lastUpdate = lastUpdate
+        self.pos = pos # inst id : amount
+        if 'cash' not in self.pos:
+            pos['cash'] = 0.0
+
+    def loadDeals(self, ds):
+        for d in ds:
+            if d.inst.id in self.pos:
+                self.pos[d.inst.id] += d.amount
+            else:
+                self.pos[d.inst.id] = d.amount
+            self.pos['cash'] += d.Cost()
+            if d.tradeDate > self.lastUpdate:
+                self.lastUpdate = d.tradeDate

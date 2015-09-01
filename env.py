@@ -15,7 +15,7 @@ class Dbconfig:
 
     def Connect(self):
         if self.conn is None:
-            self.conn = MySQLdb.connect(host=self.host,user=self.user, passwd=self.pwd, db=self.dbname, port=self.port)
+            self.conn = MySQLdb.connect(host=self.host,user=self.user, passwd=self.pwd, db=self.dbname, port=self.port, charset='utf8')
 
     def Close(self):
         if self.conn is not None:
@@ -37,9 +37,6 @@ class Book:
 
 def LoadBooks(dbconn):
     c = dbconn.cursor()
-    c.execute("SET NAMES utf8")
-    c.execute("SET CHARACTER_SET_CLIENT=utf8")
-    c.execute("SET CHARACTER_SET_RESULTS=utf8")
     c.execute('SELECT * FROM BOOKS')
     bs = c.fetchall()
     c.close()
