@@ -11,7 +11,5 @@ if __name__ == '__main__':
     dbconf.Connect()
     w = frame.Desktop(dbconf.conn)
     w.show()
-    #b = BondPanel()
-    #b.show()
     dbconf.Close()
     sys.exit(app.exec_())
