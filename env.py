@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import hashlib
 import MySQLdb
 
 def enum(**enums):
@@ -42,3 +43,59 @@ def LoadBooks(dbconn):
     c.close()
     books = [Book(b[0],b[1],b[3],b[2],b[4]) for b in bs]
     return books
+
+class User:
+    def __init__(self, id, dbconn):
+        c = dbconn.cursor()
+        try:
+            c.execute('SELECT * FROM USERS WHERE ID={}'.format(id))
+            u = c.fetchall()
+            if u:
+                self.id = id
+                self.name = u[0][1]
+                self.email = u[0][2]
+                self.role = u[0][3]
+                self.pwd = u[0][4]
+                self.pwdtmp = u[0][5]
+            else:
+                self.id = None
+        finally:
+            c.close()
+
+    def needPwdReset(self):
+        return self.pwdtmp != 0
+
+    def checkPwd(self, pwd):
+        m = hashlib.sha1()
+        m.update(pwd)
+        return m.hexdigest() == self.pwd
+
+    def resetPwd(self, newpwd, dbconn):
+        m = hashlib.sha1()
+        m.update(newpwd)
+        c = dbconn.cursor()
+        try:
+            query = """UPDATE USERS SET PWD='%s', PWD_TEMP=0 WHERE ID=%s""" % (m.hexdigest(),self.id)
+            print query
+            c.execute(query)
+            dbconn.commit()
+            self.pwd = newpwd
+        finally:
+            c.close()
+
+    def initPwd(self, dbconn):
+        import random
+        import string
+        import utils
+        initpwd = ''.join(random.choice(string.ascii_letters) for i in range(6))
+        m = hashlib.sha1()
+        m.update(initpwd)
+        utils.sendmail('CAITC-FID@caitc.cn',[self.email], u'重设CAMP密码', initpwd)
+        c = dbconn.cursor()
+        try:
+            query = """UPDATE USERS SET PWD='%s', PWD_TEMP=1 WHERE ID=%s""" % (m.hexdigest(), self.id)
+            print query
+            c.execute(query)
+            dbconn.commit()
+        finally:
+            c.close()

@@ -1,9 +1,18 @@
 # -*- coding: utf-8 -*-
 import datetime
+from lifecycle import Deal
 import WindPy
 import MySQLdb
 
-class BondBase:
+class BondDeal(Deal):
+    def __init__(self, user, instID, amount, openPrice, bookDate=None, settleDate=None):
+        Deal.__init__(self, user, instID, bookDate or datetime.datetime.now(), settleDate, amount, openPrice, shortable=False)
+
+    def nextEvent(self, asOfDate):
+        pass
+
+
+class BondInstrument:
     _windFields=['sec_name',
                  'maturitydate',
                  'couponrate',
@@ -11,9 +20,8 @@ class BondBase:
                  'carrydate',
                  'amount',
                  'latestissurercreditrating']
-    def __init__(self, id, name=None):
-        self.id = id
-        self.name = name
+    def __init__(self, instID):
+        self.instID = instID
         self.maturity = None
         self.coupon = None
         self.freq = None
