@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
+import calendar
 import datetime
+from dateutil.relativedelta import *
+
 oneday = datetime.timedelta(1)
 
 class Holiday:
@@ -67,18 +70,18 @@ class Annual(DateFreq):
         self.EOM = EOM
 
     def nextDayNoAdj(self, today):
-        if today.month==2 and today.day==29:
-            return datetime.date(today.year+1,2,28)
-        elif self.EOM:
-            pass # find date utility lib
-        else:
-            return datetime.date(today.year+1,today.month,today.day)
+        nextDay = today+relativedelta(years=+1)
+        if self.EOM:
+            _, numDays = calendar.monthrange(nextDay.year, nextDay.month)
+            nextDay = datetime.date(nextDay.year, nextDay.month, numDays)
+        return nextDay
 
     def lastDayNoAdj(self, today):
-        if today.month==2 and today.day==29:
-            return datetime.date(today.year-1,2,28)
-        else:
-            return datetime.date(today.year-1,today.month,today.day)
+        lastDay = today+relativedelta(years=-1)
+        if self.EOM:
+            _, numDays = calendar.monthrange(lastDay.year, lastDay.month)
+            lastDay = datetime.date(lastDay.year, lastDay.month, numDays)
+        return lastDay
 
 class BusinessConvention:
     def __init__(self, name):
