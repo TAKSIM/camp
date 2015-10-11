@@ -36,7 +36,7 @@ class Event:
         self.refAmount = refAmt
         self.refPrice = refPrice
         self.refYield = refYield
-        m = hashlib.sha1(self.__class__.__name__+dealID+instID+str(timestamp))
+        m = hashlib.sha1(self.__class__.__name__+dealID+instID+str(self.timestamp)+str(refAmt)+str(refDate)+str(refPrice)+str(refYield))
         self.eventID = m.hexdigest()
 
     def posChange(self, asOfDate):
@@ -48,11 +48,12 @@ class Event:
     def sign(self, user, comment='', dbconn=None):
         self.by = user.name
         self.at = datetime.datetime.now()
-        self.comment = comment
+        if comment:
+            self.comment = comment + ' | ' + self.comment
         if dbconn:
             c = dbconn.cursor()
             try:
-                query = """UPDATE EVENTS SET SIGNER='%s', SIGNED_AT='%s' WHERE ID='%s'""" % (user.name, datetime.datetime.now(),self.eventID)
+                query = """UPDATE EVENTS SET SIGNER='%s', SIGNED_AT='%s', COMMENT='%s' WHERE ID='%s'""" % (user.name, datetime.datetime.now(), self.comment, self.eventID)
                 print query
                 c.execute(query)
                 dbconn.commit()
@@ -215,7 +216,7 @@ class Deal:
         self.shortable = shortable
         self.settleDate = settleDate
         oe = OpenEvent(self.dealID, instID, bookDate, amount, tradePrice)
-        oe.sign(user,  '{0} Open: {1}'.format(instID, str(amount)))
+        oe.sign(user,  '{0} open: {1}'.format(instID, str(amount)))
         oe.bookToDB(dbconn)
         self.events = [oe]
 
@@ -250,14 +251,13 @@ class Deal:
         closeAmount = amount or posAmount
         if closeAmount > posAmount and not self.shortable:
             raise ValueError('Oversell: {0} hold {1} units, but try to sell {2} units'.format(instID, posAmount, closeAmount))
-        ce = CloseEvent(self.dealID, instID, datetime.datetime.now(), amount, closePrice)
+        ce = CloseEvent(self.dealID, instID, None, closeAmount, closePrice)
         ce.sign(user)
         ce.bookToDB(dbconn)
         self.events.append(ce)
         se = CloseSettleEvent(self.dealID, instID, settleDate or datetime.datetime.now(), closeAmount, closePrice)
         se.bookToDB(dbconn)
         self.events.append(se)
-
 
 if __name__ == '__main__':
     import env
@@ -266,20 +266,27 @@ if __name__ == '__main__':
     dbc = env.Dbconfig('hewei','wehea1984')
     dbc.Connect()
     user = env.User('000705',dbc.conn)
+
     bookDate = datetime.datetime.now()
     d = Deal(user,'123456',bookDate,bookDate,100,98, dbconn=dbc.conn)
     time.sleep(1)
     print d.positions(datetime.datetime.now())
+
     d.events[1].sign(user,'test',dbc.conn)
     print d.positions(datetime.datetime.now())
+
     d.close(user,'123456',99,50, dbconn=dbc.conn)
     d.events[-1].sign(user,'close half',dbconn=dbc.conn)
-    time.sleep(2)
+
     print d.positions(datetime.datetime.now())
-    d.close(user, '123456', 100, 50, dbconn=dbc.conn)
+
+    d.close(user, '123456', 99, 50, dbconn=dbc.conn)
     d.events[-1].sign(user, 'close another half', dbconn=dbc.conn)
     time.sleep(1)
     print d.positions(datetime.datetime.now())
+    for e in d.events:
+        print e.eventID
+
     dbc.Close()
 
 
