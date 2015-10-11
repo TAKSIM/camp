@@ -52,7 +52,7 @@ class Event:
         if dbconn:
             c = dbconn.cursor()
             try:
-                query = """UPDATE EVENTS SET SIGNER='%s', SIGNED_AT='%s' WHERE ID=%s""" % (user.name, datetime.datetime.now(),self.eventID)
+                query = """UPDATE EVENTS SET SIGNER='%s', SIGNED_AT='%s' WHERE ID='%s'""" % (user.name, datetime.datetime.now(),self.eventID)
                 print query
                 c.execute(query)
                 dbconn.commit()
@@ -77,21 +77,38 @@ class Event:
         return self.by is not None
 
     def bookToDB(self, dbconn):
-        cursor = dbconn.cursor()
-        try:
-            cursor.execute("""INSERT INTO EVENTS VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""",(self.eventID,self.dealID,self.timestamp,self.typeID(),self.by,self.at,self.cancelled,self.comment,self.refDate,self.refAmount,self.refPrice,self.refYield))
-            dbconn.commit()
-        except Exception,e:
-            print e.message
-            dbconn.rollback()
-        cursor.close()
+        if dbconn:
+            cursor = dbconn.cursor()
+            try:
+                cursor.execute("""INSERT INTO EVENTS VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
+                               (self.eventID, self.dealID, self.instID, self.timestamp, self.typeID(), self.by, self.at, self.cancelled, self.comment, self.refDate, self.refAmount, self.refPrice, self.refYield))
+                dbconn.commit()
+            except Exception, e:
+                print e.message
+                dbconn.rollback()
+            cursor.close()
 
     @staticmethod
     def fromDB(record):
-        eventID, dealID, timestamp, eventType, signer, signedAt, cancelled, comment, refDate, refAmount, refPrice, refYield = record
-        if eventType==0:
-            pass
-        #TODO: Finish db retrieving method
+        eventID, dealID, instID, timestamp, eventType, signer, signedAt, cancelled, comment, refDate, refAmount, refPrice, refYield = record
+        if eventType == EVENT_TYPE.OPEN:
+            e = OpenEvent(dealID, instID, timestamp, refAmount, refPrice, refYield)
+        elif eventType == EVENT_TYPE.OPEN_SETTLE:
+            e = OpenSettleEvent(dealID, instID, refDate, refAmount, refPrice, refYield)
+        elif eventType == EVENT_TYPE.DEFAULT:
+            e = DefaultEvent(dealID, instID, refDate, refAmount, refYield)
+        elif eventType == EVENT_TYPE.CLOSE:
+            e = CloseEvent(dealID, instID, timestamp, refAmount, refPrice, refYield)
+        elif eventType == EVENT_TYPE.CLOSE_SETTLE:
+            e = CloseSettleEvent(dealID, instID, refDate, refAmount, refPrice, refYield)
+        elif eventType == EVENT_TYPE.CASH_FLOW:
+            e = CashFlowEvent(dealID, instID, refDate, refAmount)
+        elif eventType == EVENT_TYPE.COUPON:
+            e = CouponEvent(dealID, instID, refDate, refAmount)
+        e.at = signedAt
+        e.by = signer
+        e.comment = comment
+        return e
 
     def typeID(self):
         raise NotImplementedError()
@@ -115,8 +132,8 @@ class OpenSettleEvent(Event):
 
     def posChange(self, asOfDate):
         if asOfDate > self.timestamp:
-            return {'cash':-self.settlePrice*self.amount,
-                    self.instID : self.amount}
+            return {'cash':-self.refPrice*self.refAmount,
+                    self.instID : self.refAmount}
 
     def typeID(self):
         return EVENT_TYPE.OPEN_SETTLE
@@ -128,31 +145,31 @@ class DefaultEvent(Event):
 
     def posChange(self, asOfDate):
         if asOfDate > self.timestamp:
-            return {'usablecash':self.recovery,
-                    'cash':self.recovery,
-                    self.instID:-self.amount}
+            return {'usablecash':self.refYield,
+                    'cash':self.refYield,
+                    self.instID:-self.refAmount}
 
     def typeID(self):
         return EVENT_TYPE.DEFAULT
 
 class CloseEvent(Event):
-    def __init__(self, dealID, instID, closeDate, amount, closePrice):
-        Event.__init__(self, dealID, instID, refDate=closeDate, refAmt=amount, refPrice=closePrice)
+    def __init__(self, dealID, instID, closeDate, amount, closePrice, closeYield=0):
+        Event.__init__(self, dealID, instID, refDate=closeDate, refAmt=amount, refPrice=closePrice, refYield=closeYield)
         self.comment = '{0} close: {1} units @ {2}'.format(self.instID, self.refAmount, self.refYield or self.refPrice)
 
     def typeID(self):
         return EVENT_TYPE.CLOSE
 
 class CloseSettleEvent(Event):
-    def __init__(self, dealID, instID, settleDate, amount, settlePrice):
-        Event.__init__(self, dealID, instID, refDate=settleDate, refAmt=amount, refPrice=settlePrice)
+    def __init__(self, dealID, instID, settleDate, amount, settlePrice, settleYield=0):
+        Event.__init__(self, dealID, instID, refDate=settleDate, refAmt=amount, refPrice=settlePrice, refYield=settleYield)
         self.comment = '{0} close settle: {1} units @ {2}'.format(self.instID, self.refAmount, self.refYield or self.refPrice)
 
     def posChange(self, asOfDate):
         if asOfDate > self.timestamp:
-            return {'usablecash':self.amount*self.settlePrice,
-                    'cash':self.amount*self.settlePrice,
-                    self.instID:-self.amount}
+            return {'usablecash':self.refAmount*self.refPrice,
+                    'cash':self.refAmount*self.refPrice,
+                    self.instID:-self.refAmount}
 
     def typeID(self):
         return EVENT_TYPE.CLOSE_SETTLE
@@ -188,7 +205,7 @@ class Sync:
         raise NotImplementedError()
 
 class Deal:
-    def __init__(self, user, instID, bookDate, settleDate, amount, tradePrice, shortable=False):
+    def __init__(self, user, instID, bookDate, settleDate, amount, tradePrice, shortable=False, dbconn=None):
         m = hashlib.sha1(instID)
         m.update(bookDate.isoformat())
         m.update(settleDate.isoformat())
@@ -199,9 +216,11 @@ class Deal:
         self.settleDate = settleDate
         oe = OpenEvent(self.dealID, instID, bookDate, amount, tradePrice)
         oe.sign(user,  '{0} Open: {1}'.format(instID, str(amount)))
+        oe.bookToDB(dbconn)
         self.events = [oe]
 
         se = OpenSettleEvent(self.dealID, instID, settleDate, amount, tradePrice)
+        se.bookToDB(dbconn)
         self.events.append(se)
 
     def nextEvent(self, asOfDate):
@@ -225,16 +244,18 @@ class Deal:
                             pos[k] = pd[k]
         return pos
 
-    def close(self, user, instID, closePrice, amount = None, settleDate = None, sync = None):
+    def close(self, user, instID, closePrice, amount = None, settleDate = None, sync = None, dbconn=None):
         pos = self.positions(datetime.datetime.now(), sync)
         posAmount = pos.get(instID, 0)
         closeAmount = amount or posAmount
         if closeAmount > posAmount and not self.shortable:
-            raise ValueError(u'超卖：{0}持仓{1}，计划卖出{2}'.format(instID, posAmount, closeAmount))
+            raise ValueError('Oversell: {0} hold {1} units, but try to sell {2} units'.format(instID, posAmount, closeAmount))
         ce = CloseEvent(self.dealID, instID, datetime.datetime.now(), amount, closePrice)
-        ce.sign(user, instID+u' 平仓：'+str(closeAmount))
+        ce.sign(user)
+        ce.bookToDB(dbconn)
         self.events.append(ce)
         se = CloseSettleEvent(self.dealID, instID, settleDate or datetime.datetime.now(), closeAmount, closePrice)
+        se.bookToDB(dbconn)
         self.events.append(se)
 
 
@@ -246,17 +267,17 @@ if __name__ == '__main__':
     dbc.Connect()
     user = env.User('000705',dbc.conn)
     bookDate = datetime.datetime.now()
-    d = Deal(user,'123456',bookDate,bookDate,100,98)
+    d = Deal(user,'123456',bookDate,bookDate,100,98, dbconn=dbc.conn)
     time.sleep(1)
     print d.positions(datetime.datetime.now())
-    d.events[1].sign(user,'test')
+    d.events[1].sign(user,'test',dbc.conn)
     print d.positions(datetime.datetime.now())
-    d.close(user,'123456',99,50)
-    d.events[-1].sign(user,'close half')
-    time.sleep(1)
+    d.close(user,'123456',99,50, dbconn=dbc.conn)
+    d.events[-1].sign(user,'close half',dbconn=dbc.conn)
+    time.sleep(2)
     print d.positions(datetime.datetime.now())
-    d.close(user, '123456', 100, 50)
-    d.events[-1].sign(user, 'close another half')
+    d.close(user, '123456', 100, 50, dbconn=dbc.conn)
+    d.events[-1].sign(user, 'close another half', dbconn=dbc.conn)
     time.sleep(1)
     print d.positions(datetime.datetime.now())
     dbc.Close()
