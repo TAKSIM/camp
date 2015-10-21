@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import env
+from login import LoginPage
 from PyQt4 import QtGui, QtCore
 
 class Desktop(QtGui.QMainWindow):
@@ -27,10 +28,10 @@ class Desktop(QtGui.QMainWindow):
         self.resize(800, 600)
         self.setWindowTitle(u'CAMP - 固定收益部交易管理平台')
         self.setWindowIcon(QtGui.QIcon(r'icons\todo.png'))
-        #self.setToolTip(u'This is <b>测试</b>')
+
         self.statusBar().showMessage(u'准备就绪')
-        #self.setDockOptions(QtGui.QMainWindow.AnimatedDocks | QtGui.QMainWindow.AllowNestedDocks)
-        #self.setCentralWidget(None)
+
+        self.login = LoginPage(dbconn)
 
     def initFromDB(self):
         self.books = env.LoadBooks(self.dbconn)

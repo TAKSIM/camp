@@ -75,7 +75,7 @@ class User:
         m.update(newpwd)
         c = dbconn.cursor()
         try:
-            query = """UPDATE USERS SET PWD='%s', PWD_TEMP=0 WHERE ID=%s""" % (m.hexdigest(),self.id)
+            query = """UPDATE USERS SET PWD='%s', PWD_TEMP=0 WHERE ID=%s""" % (m.hexdigest(), self.id)
             print query
             c.execute(query)
             dbconn.commit()
