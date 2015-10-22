@@ -66,20 +66,17 @@ class User:
         return self.pwdtmp != 0
 
     def checkPwd(self, pwd):
-        m = hashlib.sha1()
-        m.update(pwd)
-        return m.hexdigest() == self.pwd
+        return hashlib.sha1(pwd).hexdigest() == self.pwd
 
     def resetPwd(self, newpwd, dbconn):
-        m = hashlib.sha1()
-        m.update(newpwd)
+        hex = hashlib.sha1(newpwd).hexdigest()
         c = dbconn.cursor()
         try:
-            query = """UPDATE USERS SET PWD='%s', PWD_TEMP=0 WHERE ID=%s""" % (m.hexdigest(), self.id)
+            query = """UPDATE USERS SET PWD='%s', PWD_TEMP=0 WHERE ID=%s""" % (hex, self.id)
             print query
             c.execute(query)
             dbconn.commit()
-            self.pwd = newpwd
+            self.pwd = hex
         finally:
             c.close()
 
@@ -88,14 +85,14 @@ class User:
         import string
         import utils
         initpwd = ''.join(random.choice(string.ascii_letters) for i in range(6))
-        m = hashlib.sha1()
-        m.update(initpwd)
+        hex = hashlib.sha1(initpwd).hexdigest()
         utils.sendmail('CAITC-FID@caitc.cn',[self.email], u'重设CAMP密码', initpwd)
         c = dbconn.cursor()
         try:
-            query = """UPDATE USERS SET PWD='%s', PWD_TEMP=1 WHERE ID=%s""" % (m.hexdigest(), self.id)
+            query = """UPDATE USERS SET PWD='%s', PWD_TEMP=1 WHERE ID=%s""" % (hex, self.id)
             print query
             c.execute(query)
             dbconn.commit()
+            self.pwd = hex
         finally:
             c.close()

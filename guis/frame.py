@@ -4,9 +4,13 @@ from login import LoginPage
 from PyQt4 import QtGui, QtCore
 
 class Desktop(QtGui.QMainWindow):
+
+    launch = QtCore.pyqtSignal()
+
     def __init__(self, dbconn):
         QtGui.QMainWindow.__init__(self)
         self.dbconn = dbconn
+        self.launch.connect(self.show)
         self.initFromDB()
 
         self.BuildAssetWidget() # asset widget

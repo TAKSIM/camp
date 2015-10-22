@@ -67,9 +67,9 @@ class LoginPage(QtGui.QWidget):
             if u.id is None:
                 QtGui.QMessageBox.warning(None, u'登录错误', u'无此用户')
             else:
+                u.initPwd(self.dbconn)
                 self.resetPage = ResetPage(self.dbconn, u)
                 self.resetPage.sgOK.connect(self.loginOK)
-                u.initPwd(self.dbconn)
                 self.resetPage.show()
 
     def loginOK(self):
@@ -107,11 +107,11 @@ class ResetPage(QtGui.QWidget):
         self.setLayout(self.pwdLayout)
 
     def ok_clicked(self):
-        tmpPwd = self.tmpPwd.text()
+        tmpPwd = str(self.tmpPwd.text())
         if self.user.checkPwd(tmpPwd):
-            newPwd = self.newPwd.text()
+            newPwd = str(self.newPwd.text())
             if len(newPwd) == 0:
-                QtGui.QMessageBox.warning(None,u'错误',u'新密码不能为空')
+                QtGui.QMessageBox.warning(None, u'错误', u'新密码不能为空')
             else:
                 confPwd = self.confPwd.text()
                 if newPwd == confPwd:
@@ -119,7 +119,7 @@ class ResetPage(QtGui.QWidget):
                     self.sgOK.emit()
                     self.close()
                 else:
-                    QtGui.QMessageBox.warning(None, u'错误',u'两次输入的密码不一致')
+                    QtGui.QMessageBox.warning(None, u'错误', u'两次输入的密码不一致')
         else:
             QtGui.QMessageBox.warning(None, u'错误', u'临时密码无效')
 
@@ -129,7 +129,7 @@ if __name__ == '__main__':
     import sys
     import env
     app = QtGui.QApplication(sys.argv)
-    db = env.Dbconfig('hewei','wehea1984')
+    db = env.Dbconfig('hewei', 'wehea1984')
     db.Connect()
     u = User('000705', db.conn)
     w = ResetPage(db.conn, u)
