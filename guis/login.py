@@ -9,7 +9,9 @@ class LoginPage(QtGui.QWidget):
     def __init__(self, dbconn):
         QtGui.QWidget.__init__(self)
         self.dbconn = dbconn
-        self.setWindowTitle(u'CAMP系统登录')
+        self.setWindowTitle(u'系统登录')
+        self.setWindowIcon(QtGui.QIcon(u'icons\login.png'))
+        self.setFixedSize(180,100)
 
         layout = QtGui.QVBoxLayout()
         inputLayout = QtGui.QHBoxLayout()
@@ -83,6 +85,7 @@ class ResetPage(QtGui.QWidget):
     def __init__(self, dbconn, user):
         QtGui.QWidget.__init__(self)
         self.setWindowTitle(u'重置登录密码')
+        self.setWindowIcon(QtGui.QIcon(u'icons\login.png'))
         self.setFixedSize(200, 130)
         self.dbconn = dbconn
         self.user = user

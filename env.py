@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 import hashlib
 import MySQLdb
+from PyQt4 import QtGui
+
+sysIcon = r'icons\tent.png'
 
 def enum(**enums):
     return type('Enum', (), enums)
