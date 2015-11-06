@@ -29,7 +29,8 @@ class Desktop(QtGui.QMainWindow):
         layout = QtGui.QVBoxLayout()
         mainLayout = QtGui.QHBoxLayout()
         mainLayout.addWidget(self.toolBox)
-        mainLayout.addWidget(self.assetWidgets)
+        self.panel = QtGui.QWidget()
+        mainLayout.addWidget(self.panel)
         layout.addLayout(mainLayout)
         layout.addWidget(self.infoPanel)
 
@@ -128,9 +129,15 @@ class Desktop(QtGui.QMainWindow):
         assetWidget.setLayout(assetLayout)
 
         liabilityWidget = QtGui.QWidget()
+        self.createLiabilityButtons()
+        lbLayout = QtGui.QVBoxLayout()
+        lbLayout.addWidget(self.lbBtns)
+        liabilityWidget.setLayout(lbLayout)
+
         creditWidget = QtGui.QWidget()
         riskWidget = QtGui.QWidget()
         self.toolBox = QtGui.QToolBox()
+        #self.toolBox.setFixedWidth(120)
         self.toolBox.setSizePolicy(QtGui.QSizePolicy(QtGui.QSizePolicy.Maximum, QtGui.QSizePolicy.Ignored))
         self.toolBox.setMinimumWidth(assetWidget.sizeHint().width())
         self.toolBox.addItem(assetWidget, u"资产")
@@ -141,6 +148,25 @@ class Desktop(QtGui.QMainWindow):
         #p = self.toolBox.palette()
         #p.setColor(self.toolBox.backgroundRole(), QtGui.QColor('grey'))
         #self.toolBox.setPalette(p)
+
+    def createLiabilityButtons(self):
+        self.lbBtns = QtGui.QListWidget()
+        self.lbBtns.setViewMode(QtGui.QListView.IconMode)
+        self.lbBtns.setIconSize(QtCore.QSize(32, 28))
+        self.lbBtns.setMovement(QtGui.QListView.Static)
+        self.lbBtns.setMaximumWidth(80)
+        self.lbBtns.setSpacing(12)
+        self.lbBtns.setCurrentRow(0)
+
+        overview = QtGui.QListWidgetItem(self.lbBtns)
+        overview.setIcon(QtGui.QIcon('icons/note.png'))
+        overview.setText(u"申购记录")
+        overview.setTextAlignment(QtCore.Qt.AlignHCenter)
+        overview.setFlags(QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
+
+        self.lbWidgets = QtGui.QStackedWidget()
+        self.lbWidgets.addWidget(LiabilityOverviewPage())
+        self.lbBtns.currentItemChanged.connect(self.changeLiabilityPage)
 
     def createAssetButtons(self):
         self.assetBtns = QtGui.QListWidget()
@@ -167,12 +193,18 @@ class Desktop(QtGui.QMainWindow):
         self.assetWidgets.addWidget(AssetOverviewPage())
         self.assetWidgets.addWidget(TradeDetailsPage())
 
-        self.assetBtns.currentItemChanged.connect(self.changePage)
+        self.assetBtns.currentItemChanged.connect(self.changeAssetPage)
 
-    def changePage(self, current, previous):
+    def changeAssetPage(self, current, previous):
         if not current:
             current = previous
-        self.assetWidgets.setCurrentIndex(self.assetBtns.row(current))
+        if self.toolBox.currentIndex()==0:
+            self.assetWidgets.setCurrentIndex(self.assetBtns.row(current))
+
+    def changeLiabilityPage(self, current, previous):
+        if not current:
+            current = previous
+        self.lbWidgets.setCurrentIndex(self.lbBtns.row(current))
 
 class AssetOverviewPage(QtGui.QWidget):
     def __init__(self):
@@ -186,4 +218,11 @@ class TradeDetailsPage(QtGui.QWidget):
         QtGui.QWidget.__init__(self)
         layout = QtGui.QHBoxLayout()
         layout.addWidget(QtGui.QLabel(u'交易明细'))
+        self.setLayout(layout)
+
+class LiabilityOverviewPage(QtGui.QWidget):
+    def __init__(self):
+        QtGui.QWidget.__init__(self)
+        layout = QtGui.QHBoxLayout()
+        layout.addWidget(QtGui.QLabel(u'申购记录'))
         self.setLayout(layout)
