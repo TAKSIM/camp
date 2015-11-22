@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
+import datetime
 import env
 from login import LoginPage
-from PyQt4 import Qt, QtGui, QtCore
+from PyQt4 import Qt, QtGui, QtCore, QtSql
 import sorttest
 
 def createLabel(text):
@@ -13,12 +14,11 @@ class Desktop(QtGui.QMainWindow):
 
     launch = QtCore.pyqtSignal()
 
-    def __init__(self, dbconn, user):
+    def __init__(self, db, user):
         QtGui.QMainWindow.__init__(self)
-        self.dbconn = dbconn
         self.user = user
         self.launch.connect(self.show)
-        self.initFromDB()
+        self.initFromDB(db)
 
         self.createToolBox()
         self.createAction()
@@ -45,10 +45,30 @@ class Desktop(QtGui.QMainWindow):
         self.setWindowIcon(QtGui.QIcon(env.sysIcon))
 
         self.statusBar().showMessage(u'准备就绪')
-        self.login = LoginPage(self.dbconn)
+        #self.login = LoginPage(self.dbconn)
 
-    def initFromDB(self):
-        self.books = env.LoadBooks(self.dbconn)
+    def initFromDB(self, db):
+        self.db = QtSql.QSqlDatabase.addDatabase('QMYSQL')
+        self.db.setHostName(db.host)
+        self.db.setPort(db.port)
+        self.db.setDatabaseName(db.dbname)
+        self.db.setUserName(db.user)
+        self.db.setPassword(db.pwd)
+        if not self.db.open():
+            raise Exception(u'无法连接数据库')
+
+        # load books
+        q = QtSql.QSqlQuery()
+        q.exec_('SELECT * FROM BOOKS')
+        self.books=[]
+        while q.next():
+            self.books.append(env.Book(q.value(0).toInt()[0],
+                                       q.value(1).toString(),
+                                       q.value(2).toString(),
+                                       q.value(3).toString(),
+                                       q.value(4).toDate()))
+
+        # load
 
     def createMenu(self):
         self.mb = self.menuBar()
@@ -160,18 +180,42 @@ class Desktop(QtGui.QMainWindow):
 
         self.gbFilter = QtGui.QGroupBox(u'筛选条件')
         layoutFilter = QtGui.QGridLayout()
-        layoutFilter.addWidget(QtGui.QLabel(u'账簿'),0,0,1,1)
+        # book filter
+        layoutBooks = QtGui.QHBoxLayout()
+        layoutBooks.addWidget(QtGui.QLabel(u'账簿'))
         dbBooks = QtGui.QComboBox()
         dbBooks.addItems([b.name_cn_short for b in self.books])
-        layoutFilter.addWidget(dbBooks,0,1,1,1)
+        layoutBooks.addWidget(dbBooks)
+        layoutFilter.addLayout(layoutBooks,0,0,1,1)
+        # start date filter
+        layoutDates = QtGui.QHBoxLayout()
+        layoutDates.addWidget(QtGui.QLabel(u'开仓日期'))
+        layoutDates.addWidget(QtGui.QLabel(u'起始'))
+        startDate = QtGui.QDateEdit(env.earliestDate)
+        startDate.setCalendarPopup(True)
+        layoutDates.addWidget(startDate)
+        layoutDates.addWidget(QtGui.QLabel(u'截至'))
+        endDate = QtGui.QDateEdit(datetime.date.today())
+        endDate.setCalendarPopup(True)
+        layoutDates.addWidget(endDate)
+        layoutFilter.addLayout(layoutDates,0,1,1,1)
+        # show expired trades
+        showExpTrds = QtGui.QCheckBox(u'显示已平仓的交易')
+        showExpTrds.setChecked(False)
+        layoutFilter.addWidget(showExpTrds,0,2,1,1)
+
         self.gbFilter.setLayout(layoutFilter)
         layout.addWidget(self.gbFilter)
 
         self.actView = QtGui.QTableWidget()
+        self.actView.setColumnCount(5)
         self.actView.setHorizontalHeaderLabels([u'仓位',u'数量',u'买/卖',u'开仓价格',u'到期收益率'])
         #self.actView.insertRow([1,2,3,4,5])
         self.actView.resizeColumnsToContents()
         self.actView.resizeRowsToContents()
+        #self.actView.hideColumn(0)
+        #self.actView.populate()
+
         layout.addWidget(self.actView)
         return layout
 
