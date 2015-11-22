@@ -25,14 +25,17 @@ class Desktop(QtGui.QMainWindow):
         self.createMenu()
         self.createSystemTray()
 
-        self.infoPanel = sorttest.Window()
+        self.msgPanel = sorttest.Window()
         layout = QtGui.QVBoxLayout()
         mainLayout = QtGui.QHBoxLayout()
         mainLayout.addWidget(self.toolBox)
         self.panel = QtGui.QWidget()
+        self.layoutOverview = self.createOverviewLayout()
+        self.panel.setLayout(self.layoutOverview)
+
         mainLayout.addWidget(self.panel)
         layout.addLayout(mainLayout)
-        layout.addWidget(self.infoPanel)
+        layout.addWidget(self.msgPanel)
 
         self.centralWidget = QtGui.QWidget()
         self.centralWidget.setLayout(layout)
@@ -80,22 +83,6 @@ class Desktop(QtGui.QMainWindow):
         self.trayIcon.activated.connect(self.iconActivated)
         self.trayIcon.show()
 
-    def createWidgets(self):
-
-        self.centralWidget = QtGui.QWidget()
-        self.infoWidget = QtGui.QWidget()
-        self.infoWidget.setWindowTitle(u'交易信息')
-        self.mainPanel = QtGui.QWidget()
-        self.mainPanel.setWindowTitle(u'主面板')
-
-        self.bookList = QtGui.QComboBox()
-        self.bookList.setEditable(False)
-        self.bookList.addItems([b.name_cn_short for b in self.books])
-        self.bookLabel = QtGui.QLabel(u'账簿')
-        self.bookLayout = QtGui.QHBoxLayout()
-        self.bookLayout.addWidget(self.bookLabel)
-        self.bookLayout.addWidget(self.bookList)
-
     def setupLayout(self):
         self.setCentralWidget(self.centralWidget)
         self.layout = QtGui.QVBoxLayout()
@@ -123,16 +110,12 @@ class Desktop(QtGui.QMainWindow):
 
     def createToolBox(self):
         assetWidget = QtGui.QWidget()
-        self.createAssetButtons()
-        assetLayout = QtGui.QVBoxLayout()
-        assetLayout.addWidget(self.assetBtns)
+        assetLayout = self.createAssetButtons()
         assetWidget.setLayout(assetLayout)
 
         liabilityWidget = QtGui.QWidget()
-        self.createLiabilityButtons()
-        lbLayout = QtGui.QVBoxLayout()
-        lbLayout.addWidget(self.lbBtns)
-        liabilityWidget.setLayout(lbLayout)
+        liabilityLayout = self.createLiabilityButtons()
+        liabilityWidget.setLayout(liabilityLayout)
 
         creditWidget = QtGui.QWidget()
         riskWidget = QtGui.QWidget()
@@ -145,55 +128,52 @@ class Desktop(QtGui.QMainWindow):
         self.toolBox.addItem(creditWidget, u'信用研究')
         self.toolBox.addItem(riskWidget, u'风险控制')
 
-        #p = self.toolBox.palette()
-        #p.setColor(self.toolBox.backgroundRole(), QtGui.QColor('grey'))
-        #self.toolBox.setPalette(p)
-
     def createLiabilityButtons(self):
-        self.lbBtns = QtGui.QListWidget()
-        self.lbBtns.setViewMode(QtGui.QListView.IconMode)
-        self.lbBtns.setIconSize(QtCore.QSize(32, 28))
-        self.lbBtns.setMovement(QtGui.QListView.Static)
-        self.lbBtns.setMaximumWidth(80)
-        self.lbBtns.setSpacing(12)
-        self.lbBtns.setCurrentRow(0)
-
-        overview = QtGui.QListWidgetItem(self.lbBtns)
-        overview.setIcon(QtGui.QIcon('icons/note.png'))
-        overview.setText(u"申购记录")
-        overview.setTextAlignment(QtCore.Qt.AlignHCenter)
-        overview.setFlags(QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
-
-        self.lbWidgets = QtGui.QStackedWidget()
-        self.lbWidgets.addWidget(LiabilityOverviewPage())
-        self.lbBtns.currentItemChanged.connect(self.changeLiabilityPage)
+        layout = QtGui.QGridLayout()
+        self.btLiability = QtGui.QToolButton()
+        self.btLiability.setToolButtonStyle(3)
+        self.btLiability.setText(u'申购明细')
+        self.btLiability.setIcon(QtGui.QIcon('icons/note.png'))
+        self.btLiability.setIconSize(Qt.QSize(32,28))
+        layout.addWidget(self.btLiability,0,0,1,1)
+        return layout
 
     def createAssetButtons(self):
-        self.assetBtns = QtGui.QListWidget()
-        self.assetBtns.setViewMode(QtGui.QListView.IconMode)
-        self.assetBtns.setIconSize(QtCore.QSize(32, 28))
-        self.assetBtns.setMovement(QtGui.QListView.Static)
-        self.assetBtns.setMaximumWidth(80)
-        self.assetBtns.setSpacing(12)
-        self.assetBtns.setCurrentRow(0)
+        layout = QtGui.QGridLayout()
+        self.btOverview = QtGui.QToolButton()
+        self.btOverview.setToolButtonStyle(3)
+        self.btOverview.setIcon(QtGui.QIcon('icons/global'))
+        self.btOverview.setText(u'账户总览')
+        self.btOverview.setIconSize(Qt.QSize(32,28))
+        layout.addWidget(self.btOverview,0,0,1,1)
 
-        overview = QtGui.QListWidgetItem(self.assetBtns)
-        overview.setIcon(QtGui.QIcon('icons/global.png'))
-        overview.setText(u"账户总览")
-        overview.setTextAlignment(QtCore.Qt.AlignHCenter)
-        overview.setFlags(QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
+        self.btTrades = QtGui.QToolButton()
+        self.btTrades.setToolButtonStyle(3)
+        self.btTrades.setIcon(QtGui.QIcon('icons/items'))
+        self.btTrades.setText(u'交易明细')
+        self.btTrades.setIconSize(Qt.QSize(32,28))
+        layout.addWidget(self.btTrades,1,0,1,1)
+        return layout
 
-        overview = QtGui.QListWidgetItem(self.assetBtns)
-        overview.setIcon(QtGui.QIcon('icons/items.png'))
-        overview.setText(u"交易记录")
-        overview.setTextAlignment(QtCore.Qt.AlignHCenter)
-        overview.setFlags(QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
+    def createOverviewLayout(self):
+        layout = QtGui.QVBoxLayout()
 
-        self.assetWidgets = QtGui.QStackedWidget()
-        self.assetWidgets.addWidget(AssetOverviewPage())
-        self.assetWidgets.addWidget(TradeDetailsPage())
+        self.gbFilter = QtGui.QGroupBox(u'筛选条件')
+        layoutFilter = QtGui.QGridLayout()
+        layoutFilter.addWidget(QtGui.QLabel(u'账簿'),0,0,1,1)
+        dbBooks = QtGui.QComboBox()
+        dbBooks.addItems([b.name_cn_short for b in self.books])
+        layoutFilter.addWidget(dbBooks,0,1,1,1)
+        self.gbFilter.setLayout(layoutFilter)
+        layout.addWidget(self.gbFilter)
 
-        self.assetBtns.currentItemChanged.connect(self.changeAssetPage)
+        self.actView = QtGui.QTableWidget()
+        self.actView.setHorizontalHeaderLabels([u'仓位',u'数量',u'买/卖',u'开仓价格',u'到期收益率'])
+        #self.actView.insertRow([1,2,3,4,5])
+        self.actView.resizeColumnsToContents()
+        self.actView.resizeRowsToContents()
+        layout.addWidget(self.actView)
+        return layout
 
     def changeAssetPage(self, current, previous):
         if not current:
