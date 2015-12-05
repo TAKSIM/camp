@@ -12,7 +12,7 @@ if __name__ == '__main__':
     u = env.User('000705', db.conn)
     page = login.LoginPage(db.conn)
     w = page
-    dt = frame.Desktop(db.conn, u)
+    dt = frame.Desktop(db, u)
     w.loginSuccess.connect(dt.launch)
     w.show()
     sys.exit(app.exec_())

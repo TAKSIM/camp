@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
+import datetime
 import hashlib
 import MySQLdb
 from PyQt4 import QtGui
 
 sysIcon = r'icons\tent.png'
+earliestDate = datetime.date(2014,3,17) # the date ying xue 1 launches
 
 def enum(**enums):
     return type('Enum', (), enums)
@@ -27,7 +29,7 @@ class Dbconfig:
             self.conn = None
 
 class Book:
-    def __init__(self, id, name_en, name_cn_full, name_cn_short, startDate = None):
+    def __init__(self, id, name_en, name_cn_short, name_cn_full, startDate = None):
         self.id = id
         self.name_en = name_en
         self.name_cn_full = name_cn_full

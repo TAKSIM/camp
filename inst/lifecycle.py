@@ -197,13 +197,15 @@ class CouponEvent(CashFlowEvent):
         return EVENT_TYPE.COUPON
 
 class Sync:
-    def __init__(self, timestamp, positions, syncType = 'EOD'):
+    def __init__(self, timestamp, user, book, positions, syncType = 'EOD'):
         self.timestamp = timestamp
+        self.book = book
         self.positions = positions
-        self.syncType = syncType # EOD, SOD, Intraday
+        self.syncType = syncType # EOD, SOD
+        self.maker = user
 
     def bookToDB(self, dbconn):
-        raise NotImplementedError()
+        pass
 
 class Deal:
     def __init__(self, user, instID, bookDate, settleDate, amount, tradePrice, shortable=False, dbconn=None):
@@ -259,6 +261,9 @@ class Deal:
         se.bookToDB(dbconn)
         self.events.append(se)
 
+def LoadDeals(bookID, upTo=None, sync=None):
+    pass
+
 if __name__ == '__main__':
     import env
     import datetime
@@ -280,8 +285,8 @@ if __name__ == '__main__':
 
     print d.positions(datetime.datetime.now())
 
-    d.close(user, '123456', 99, 50, dbconn=dbc.conn)
-    d.events[-1].sign(user, 'close another half', dbconn=dbc.conn)
+    d.close(user, '123456', 99, 25, dbconn=dbc.conn)
+    d.events[-1].sign(user, 'close another quarter', dbconn=dbc.conn)
     time.sleep(1)
     print d.positions(datetime.datetime.now())
     for e in d.events:

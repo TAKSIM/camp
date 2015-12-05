@@ -45,7 +45,6 @@ class Desktop(QtGui.QMainWindow):
         self.setWindowIcon(QtGui.QIcon(env.sysIcon))
 
         self.statusBar().showMessage(u'准备就绪')
-        #self.login = LoginPage(self.dbconn)
 
     def initFromDB(self, db):
         self.db = QtSql.QSqlDatabase.addDatabase('QMYSQL')
@@ -143,10 +142,10 @@ class Desktop(QtGui.QMainWindow):
         #self.toolBox.setFixedWidth(120)
         self.toolBox.setSizePolicy(QtGui.QSizePolicy(QtGui.QSizePolicy.Maximum, QtGui.QSizePolicy.Ignored))
         self.toolBox.setMinimumWidth(assetWidget.sizeHint().width())
-        self.toolBox.addItem(assetWidget, u"资产")
-        self.toolBox.addItem(liabilityWidget, u"负债")
-        self.toolBox.addItem(creditWidget, u'信用研究')
-        self.toolBox.addItem(riskWidget, u'风险控制')
+        self.toolBox.addItem(assetWidget, u'  资    产')
+        self.toolBox.addItem(liabilityWidget, u"  负    债")
+        self.toolBox.addItem(creditWidget, u'  信用研究')
+        self.toolBox.addItem(riskWidget, u'  风险控制')
 
     def createLiabilityButtons(self):
         layout = QtGui.QGridLayout()
@@ -179,30 +178,19 @@ class Desktop(QtGui.QMainWindow):
         layout = QtGui.QVBoxLayout()
 
         self.gbFilter = QtGui.QGroupBox(u'筛选条件')
-        layoutFilter = QtGui.QGridLayout()
+        layoutFilter = QtGui.QHBoxLayout()
+        layoutFilter.setAlignment(QtCore.Qt.AlignLeft)
         # book filter
         layoutBooks = QtGui.QHBoxLayout()
         layoutBooks.addWidget(QtGui.QLabel(u'账簿'))
         dbBooks = QtGui.QComboBox()
         dbBooks.addItems([b.name_cn_short for b in self.books])
         layoutBooks.addWidget(dbBooks)
-        layoutFilter.addLayout(layoutBooks,0,0,1,1)
-        # start date filter
-        layoutDates = QtGui.QHBoxLayout()
-        layoutDates.addWidget(QtGui.QLabel(u'开仓日期'))
-        layoutDates.addWidget(QtGui.QLabel(u'起始'))
-        startDate = QtGui.QDateEdit(env.earliestDate)
-        startDate.setCalendarPopup(True)
-        layoutDates.addWidget(startDate)
-        layoutDates.addWidget(QtGui.QLabel(u'截至'))
-        endDate = QtGui.QDateEdit(datetime.date.today())
-        endDate.setCalendarPopup(True)
-        layoutDates.addWidget(endDate)
-        layoutFilter.addLayout(layoutDates,0,1,1,1)
+        layoutFilter.addLayout(layoutBooks)
         # show expired trades
         showExpTrds = QtGui.QCheckBox(u'显示已平仓的交易')
         showExpTrds.setChecked(False)
-        layoutFilter.addWidget(showExpTrds,0,2,1,1)
+        layoutFilter.addWidget(showExpTrds)
 
         self.gbFilter.setLayout(layoutFilter)
         layout.addWidget(self.gbFilter)
