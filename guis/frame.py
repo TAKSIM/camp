@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-import datetime
-import env
 from login import LoginPage
+import env
+from inst.lifecycle import Book, Deal
 from PyQt4 import Qt, QtGui, QtCore, QtSql
 import sorttest
 
@@ -14,11 +14,16 @@ class Desktop(QtGui.QMainWindow):
 
     launch = QtCore.pyqtSignal()
 
-    def __init__(self, db, user):
+    def __init__(self):
         QtGui.QMainWindow.__init__(self)
-        self.user = user
+        self.initDB()
+
+        self.login = LoginPage()
+        self.login.loginSuccess.connect(self.launch)
         self.launch.connect(self.show)
-        self.initFromDB(db)
+        self.login.show()
+
+        self.initFromDB()
 
         self.createToolBox()
         self.createAction()
@@ -46,28 +51,36 @@ class Desktop(QtGui.QMainWindow):
 
         self.statusBar().showMessage(u'准备就绪')
 
-    def initFromDB(self, db):
+    def initDB(self, host='caitcfid.mysql.rds.aliyuncs.com', port=3306, dbname='secs'):
         self.db = QtSql.QSqlDatabase.addDatabase('QMYSQL')
-        self.db.setHostName(db.host)
-        self.db.setPort(db.port)
-        self.db.setDatabaseName(db.dbname)
-        self.db.setUserName(db.user)
-        self.db.setPassword(db.pwd)
+        self.db.setHostName(host)
+        self.db.setPort(port)
+        self.db.setDatabaseName(dbname)
+        self.db.setUserName('hewei')
+        self.db.setPassword('wehea1984')
         if not self.db.open():
             raise Exception(u'无法连接数据库')
 
+    def initFromDB(self):
         # load books
+        self.books = []
         q = QtSql.QSqlQuery()
         q.exec_('SELECT * FROM BOOKS')
-        self.books=[]
         while q.next():
-            self.books.append(env.Book(q.value(0).toInt()[0],
-                                       q.value(1).toString(),
-                                       q.value(2).toString(),
-                                       q.value(3).toString(),
-                                       q.value(4).toDate()))
+            self.books.append(Book(q.value(0).toInt()[0],
+                                   q.value(1).toString(),
+                                   q.value(2).toString(),
+                                   q.value(3).toString(),
+                                   q.value(4).toDate()))
 
-        # load
+        # load deals
+        self.deals = []
+        q.exec_('SELECT * FROM DEALS')
+        while q.next():
+            d = q.value(0).toString()
+            b = q.value(1).toInt()[0]
+            thisDeal = Deal(d, b)
+            self.deals.append(thisDeal)
 
     def createMenu(self):
         self.mb = self.menuBar()

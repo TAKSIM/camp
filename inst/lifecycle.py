@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import hashlib
 from env import enum
+from PyQt4 import QtSql
 import datetime
 # LOGIC:
 # deal is a set of events, type of events include trade open/close, coupon, collateral etc
@@ -22,6 +23,19 @@ import datetime
 # identify schedule by (dealID, instID, scheduleDate, amount, reason)
 
 EVENT_TYPE = enum(OPEN=0, OPEN_SETTLE=1, CLOSE=2, CLOSE_SETTLE=3, DEFAULT=4, CASH_FLOW=5, COUPON=6)
+
+class Book:
+    def __init__(self, id, name_en, name_cn_short, name_cn_full, startDate = None):
+        self.id = id
+        self.name_en = name_en
+        self.name_cn_full = name_cn_full
+        self.name_cn_short = name_cn_short
+        self.startDate = startDate
+
+    def LoadTrades(self, dbconn):
+        c = dbconn.cursor()
+        c.execute('SELECT * FROM TRADES WHERE BOOK={}'.format(self.name_en))
+        c.close()
 
 class Event:
     def __init__(self, dealID, instID, timestamp=None, signedBy=None, signedAt=None, cancel=False, comment='', refDate=None, refAmt=None, refPrice=None, refYield=None):
@@ -90,8 +104,7 @@ class Event:
             cursor.close()
 
     @staticmethod
-    def fromDB(record):
-        eventID, dealID, instID, timestamp, eventType, signer, signedAt, cancelled, comment, refDate, refAmount, refPrice, refYield = record
+    def fromDB(eventID, dealID, instID, timestamp, eventType, signer, signedAt, cancelled, comment, refDate, refAmount, refPrice, refYield):
         if eventType == EVENT_TYPE.OPEN:
             e = OpenEvent(dealID, instID, timestamp, refAmount, refPrice, refYield)
         elif eventType == EVENT_TYPE.OPEN_SETTLE:
@@ -208,26 +221,82 @@ class Sync:
         pass
 
 class Deal:
-    def __init__(self, user, instID, bookDate, settleDate, amount, tradePrice, shortable=False, dbconn=None):
-        m = hashlib.sha1(instID)
-        m.update(bookDate.isoformat())
-        m.update(settleDate.isoformat())
-        m.update(str(amount))
-        m.update(str(tradePrice))
-        self.dealID = m.hexdigest()
-        self.shortable = shortable
-        self.settleDate = settleDate
-        oe = OpenEvent(self.dealID, instID, bookDate, amount, tradePrice)
-        oe.sign(user,  '{0} open: {1}'.format(instID, str(amount)))
-        oe.bookToDB(dbconn)
-        self.events = [oe]
+    def __init__(self, *args, **kwargs):
+        if len(args) > 3:
+            user, bookID, instID, bookDate, settleDate, amount, tradePrice = args
+            dealID = kwargs.get('dealID', None)
+            shortable = kwargs.get('shortable', False)
+            dbconn = kwargs.get('dbconn', None)
+            self.bookID = bookID
+            if dealID:
+                self.dealID = dealID
+            else:
+                m = hashlib.sha1(instID)
+                m.update(str(bookID))
+                m.update(bookDate.isoformat())
+                m.update(settleDate.isoformat())
+                m.update(str(amount))
+                m.update(str(tradePrice))
+                self.dealID = m.hexdigest()
+            self.shortable = shortable
+            self.settleDate = settleDate
+            oe = OpenEvent(self.dealID, instID, bookDate, amount, tradePrice)
+            oe.sign(user,  '{0} open: {1}'.format(instID, str(amount)))
+            oe.bookToDB(dbconn)
+            self.events = [oe]
 
-        se = OpenSettleEvent(self.dealID, instID, settleDate, amount, tradePrice)
-        se.bookToDB(dbconn)
-        self.events.append(se)
+            se = OpenSettleEvent(self.dealID, instID, settleDate, amount, tradePrice)
+            se.bookToDB(dbconn)
+            self.events.append(se)
 
-    def nextEvent(self, asOfDate):
-        return None
+            self.bookToDB(dbconn)
+        else:
+            dealID, book = args
+            q = QtSql.QSqlQuery()
+            q.exec_("""SELECT * FROM EVENTS WHERE DEAL_ID='%s' ORDER BY TIME_STAMP""" % (dealID,))
+            while q.next():
+                self.events = []
+
+                eventID = q.value(0).toString()
+                dealID = q.value(1).toString()
+                instID = q.value(2).toString()
+                timestamp = q.value(3).toDateTime()
+                eventType = q.value(4).toInt()[0]
+                signer = q.value(5).toString()
+                signedAt = q.value(6).toString()
+                cancelled = q.value(7).toBool()
+                comment = q.value(8).toString()
+                refDate = q.value(9).toDate()
+                refAmount = q.value(10).toDouble()[0]
+                refPrice = q.value(11).toDouble()[0]
+                refYield = q.value(12).toDouble()[0]
+
+                thisEvent = Event.fromDB(eventID, dealID, instID, timestamp, eventType, signer, signedAt, cancelled,
+                                         comment, refDate, refAmount, refPrice, refYield)
+                self.events.append(thisEvent)
+
+    def bookToDB(self, dbconn):
+        if dbconn:
+            cursor = dbconn.cursor()
+            try:
+                cursor.execute("""INSERT INTO DEALS VALUES (%s,%s,%s,%s)""",
+                               (self.dealID, self.book.id, self.events[0].timestamp, None))
+                dbconn.commit()
+            except Exception, e:
+                print e.message
+                dbconn.rollback()
+            cursor.close()
+
+    def closeOnDB(self, dbconn):
+        if dbconn:
+            c = dbconn.cursor()
+            try:
+                query = """UPDATE DEALS SET CLOSE='%s' WHERE ID='%s'""" % (self.events[-1].timestamp)
+                print query
+                c.execute(query)
+                dbconn.commit()
+            finally:
+                c.close()
 
     def positions(self, asOfDate, sync = None):
         if sync is None:
@@ -260,9 +329,39 @@ class Deal:
         se = CloseSettleEvent(self.dealID, instID, settleDate or datetime.datetime.now(), closeAmount, closePrice)
         se.bookToDB(dbconn)
         self.events.append(se)
+        if abs(closeAmount - posAmount) < 0.0001:
+            self.closeOnDB(dbconn)
 
-def LoadDeals(bookID, upTo=None, sync=None):
-    pass
+# def LoadBooks(dbconn):
+#     c = dbconn.cursor()
+#     c.execute('SELECT * FROM BOOKS')
+#     bs = c.fetchall()
+#     c.close()
+#     books = [Book(b[0],b[1],b[3],b[2],b[4]) for b in bs]
+#     return books
+
+# def LoadDeals(dbconn, bookID = None, liveOnly=True):
+#     if dbconn:
+#         c = dbconn.cursor()
+#         try:
+#             query = 'SELECT * FROM DEALS'
+#             cond = []
+#             if bookID:
+#                 cond.append("""BOOK='%s'""" % (bookID))
+#             if liveOnly:
+#                 cond.append("""CLOSE IS NULL""")
+#             if cond:
+#                 query += ' WHERE ' + ','.join(cond)
+#             c.execute(query)
+#             data = c.fetchall()
+#             ds = []
+#             for deal in data:
+#                 d, b, _, _ = deal
+#                 thisDeal = Deal(d, b, dbconn=dbconn)
+#                 ds.append(thisDeal)
+#             return ds
+#         finally:
+#             c.close()
 
 if __name__ == '__main__':
     import env
@@ -270,10 +369,12 @@ if __name__ == '__main__':
     import time
     dbc = env.Dbconfig('hewei','wehea1984')
     dbc.Connect()
-    user = env.User('000705',dbc.conn)
 
+    user = env.User('000705',dbc.conn)
+    bs = env.LoadBooks(dbc.conn)
+    book = bs[0]
     bookDate = datetime.datetime.now()
-    d = Deal(user,'123456',bookDate,bookDate,100,98, dbconn=dbc.conn)
+    d = Deal(user, book, '123456', bookDate, bookDate, 100, 98, dbconn=dbc.conn)
     time.sleep(1)
     print d.positions(datetime.datetime.now())
 

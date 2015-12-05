@@ -6,9 +6,8 @@ class LoginPage(QtGui.QWidget):
 
     loginSuccess = QtCore.pyqtSignal()
 
-    def __init__(self, dbconn):
+    def __init__(self):
         QtGui.QWidget.__init__(self)
-        self.dbconn = dbconn
         self.setWindowTitle(u'系统登录')
         self.setWindowIcon(QtGui.QIcon(u'icons\login.png'))
         self.setFixedSize(180,100)
@@ -50,7 +49,7 @@ class LoginPage(QtGui.QWidget):
         if len(usr) == 0:
             QtGui.QMessageBox.warning(None, u'登陆错误', u'用户名不能为空')
         else:
-            u = User(usr, self.dbconn)
+            u = User(usr)
             if u.id is None:
                 QtGui.QMessageBox.warning(None, u'登录错误', u'无此用户')
             else:
@@ -65,12 +64,12 @@ class LoginPage(QtGui.QWidget):
         if len(usr) == 0:
             QtGui.QMessageBox.warning(None, u'登陆错误', u'用户名不能为空')
         else:
-            u = User(usr, self.dbconn)
+            u = User(usr)
             if u.id is None:
                 QtGui.QMessageBox.warning(None, u'登录错误', u'无此用户')
             else:
-                u.initPwd(self.dbconn)
-                self.resetPage = ResetPage(self.dbconn, u)
+                u.initPwd()
+                self.resetPage = ResetPage(u)
                 self.resetPage.sgOK.connect(self.loginOK)
                 self.resetPage.show()
 
@@ -82,12 +81,11 @@ class ResetPage(QtGui.QWidget):
 
     sgOK = QtCore.pyqtSignal()
 
-    def __init__(self, dbconn, user):
+    def __init__(self, user):
         QtGui.QWidget.__init__(self)
         self.setWindowTitle(u'重置登录密码')
         self.setWindowIcon(QtGui.QIcon(u'icons\login.png'))
         self.setFixedSize(200, 130)
-        self.dbconn = dbconn
         self.user = user
         self.pwdLayout = QtGui.QGridLayout()
         self.pwdLayout.addWidget(QtGui.QLabel(u'临时密码'), 0, 0, 1, 1)
@@ -118,7 +116,7 @@ class ResetPage(QtGui.QWidget):
             else:
                 confPwd = self.confPwd.text()
                 if newPwd == confPwd:
-                    self.user.resetPwd(newPwd, self.dbconn)
+                    self.user.resetPwd(newPwd)
                     self.sgOK.emit()
                     self.close()
                 else:
