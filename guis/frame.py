@@ -11,9 +11,6 @@ def createLabel(text):
     return label
 
 class Desktop(QtGui.QMainWindow):
-
-    #launch = QtCore.pyqtSignal()
-
     def __init__(self):
         QtGui.QMainWindow.__init__(self)
         self.initDB()
@@ -85,6 +82,7 @@ class Desktop(QtGui.QMainWindow):
         self.mb = self.menuBar()
         m1 = self.mb.addMenu(u'&系统')
         m1.addAction(self.exitAction)
+        m1.addAction(self.refreshAction)
 
         m2 = self.mb.addMenu(u'&交易')
         m2.addAction(self.tradeBond)
@@ -94,12 +92,16 @@ class Desktop(QtGui.QMainWindow):
 
     def createAction(self):
         self.exitAction = QtGui.QAction(QtGui.QIcon(r'icons\exit.png'), u'退出', self, triggered=QtGui.qApp.quit)
+        self.refreshAction = QtGui.QAction(QtGui.QIcon(r'icons\refresh.png'), u'刷新', self, triggered=self.refresh, shortcut='F5')
         self.tradeBond = QtGui.QAction(u'债券', self, shortcut='Ctrl+T')
         self.aboutAction = QtGui.QAction(u"关于CAMP", self, triggered=self.about)
 
         self.minimize = QtGui.QAction(u'最小化', self, triggered=self.hide)
         self.maximize = QtGui.QAction(u'最大化',self, triggered=self.showMaximized)
         self.restore = QtGui.QAction(u'还原', self, triggered=self.showNormal)
+
+    def refresh(self):
+        self.eventModel.query().exec_()
 
     def createSystemTray(self):
         self.trayIconMenu = QtGui.QMenu(self)

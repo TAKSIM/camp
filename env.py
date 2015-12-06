@@ -33,7 +33,7 @@ class User:
         q.exec_('SELECT * FROM USERS WHERE ID={}'.format(id))
         while q.next():
             self.id = str(q.value(0).toString())
-            self.name = str(q.value(1).toString())
+            self.name = q.value(1).toString()
             self.email = str(q.value(2).toString())
             self.role = q.value(3).toInt()[0]
             self.pwd = str(q.value(4).toString())

@@ -32,11 +32,6 @@ class Book:
         self.name_cn_short = name_cn_short
         self.startDate = startDate
 
-    def LoadTrades(self, dbconn):
-        c = dbconn.cursor()
-        c.execute('SELECT * FROM TRADES WHERE BOOK={}'.format(self.name_en))
-        c.close()
-
 class Event:
     def __init__(self, dealID, instID, timestamp=None, signedBy=None, signedAt=None, cancel=False, comment='', refDate=None, refAmt=None, refPrice=None, refYield=None):
         self.dealID = dealID
@@ -64,44 +59,34 @@ class Event:
         self.at = datetime.datetime.now()
         if comment:
             self.comment = comment + ' | ' + self.comment
-        if dbconn:
-            c = dbconn.cursor()
-            try:
-                query = """UPDATE EVENTS SET SIGNER='%s', SIGNED_AT='%s', COMMENT='%s' WHERE ID='%s'""" % (user.name, datetime.datetime.now(), self.comment, self.eventID)
-                print query
-                c.execute(query)
-                dbconn.commit()
-            finally:
-                c.close()
+        q = QtSql.QSqlQuery()
+        query = """UPDATE EVENTS SET SIGNER='%s', SIGNED_AT='%s', COMMENT='%s' WHERE ID='%s'""" % (user.name, datetime.datetime.now(), self.comment, self.eventID)
+        q.exec_(query)
+        QtSql.QSqlDatabase().commit()
 
-    def cancel(self, user, comment='', dbconn=None):
+    def cancel(self, user, comment=''):
         self.by = user.name
         self.at = datetime.datetime.now()
         self.comment = comment
         self.cancelled = True
-        if dbconn:
-            c = dbconn.cursor()
-            try:
-                query = """UPDATE EVENTS SET CANCEL='%s' WHERE ID=%s""" % (1,self.eventID)
-                c.execute(query)
-                dbconn.commit()
-            finally:
-                c.close()
+        q = QtSql.QSqlQuery()
+        query = """UPDATE EVENTS SET CANCEL='%s' WHERE ID=%s""" % (1,self.eventID)
+        q.exec_(query)
+        QtSql.QSqlDatabase().commit()
 
     def confirmed(self):
         return self.by is not None
 
-    def bookToDB(self, dbconn):
-        if dbconn:
-            cursor = dbconn.cursor()
-            try:
-                cursor.execute("""INSERT INTO EVENTS VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
-                               (self.eventID, self.dealID, self.instID, self.timestamp, self.typeID(), self.by, self.at, self.cancelled, self.comment, self.refDate, self.refAmount, self.refPrice, self.refYield))
-                dbconn.commit()
-            except Exception, e:
-                print e.message
-                dbconn.rollback()
-            cursor.close()
+    def bookToDB(self):
+        try:
+            q = QtSql.QSqlQuery()
+            q.exec_('INSERT INTO EVENTS VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)' % (
+                self.eventID, self.dealID, self.instID, self.timestamp, self.typeID(), self.by, self.at, self.cancelled,
+                self.comment, self.refDate, self.refAmount, self.refPrice, self.refYield))
+            QtSql.QSqlDatabase().commit()
+        except Exception, e:
+            print e.message
+            QtSql.QSqlDatabase().rollback()
 
     @staticmethod
     def fromDB(eventID, dealID, instID, timestamp, eventType, signer, signedAt, cancelled, comment, refDate, refAmount, refPrice, refYield):
@@ -130,7 +115,7 @@ class Event:
 class OpenEvent(Event):
     def __init__(self, dealID, instID, bookDate, amount, tradePrice, tradeYield=0):
         Event.__init__(self, dealID, instID, refDate=bookDate, refAmt=amount, refPrice=tradePrice, refYield=tradeYield)
-        self.comment = '{0} open: {1} units @ {2} as of {3}'.format(self.instID, self.refAmount, self.refYield or self.refPrice, self.refDate)
+        self.comment = u'开仓：{1}单位，成本{2}'.format(self.instID, self.refAmount, self.refYield or self.refPrice)
 
     def posChange(self, asOfDate):
         if asOfDate > self.timestamp:
@@ -142,7 +127,7 @@ class OpenEvent(Event):
 class OpenSettleEvent(Event):
     def __init__(self, dealID, instID, settleDate, amount, settlePrice, settleYield=0):
         Event.__init__(self, dealID, instID, refDate=settleDate, refAmt=amount, refPrice=settlePrice, refYield=settleYield)
-        self.comment = '{0} open settle: {1} units @ {2} as of {3}'.format(self.instID, self.refAmount, self.refYield or self.refPrice, self.refDate)
+        self.comment = u'开仓成交：{1}单位，成本{2}'.format(self.instID, self.refAmount, self.refYield or self.refPrice)
 
     def posChange(self, asOfDate):
         if asOfDate > self.timestamp:
@@ -155,7 +140,7 @@ class OpenSettleEvent(Event):
 class DefaultEvent(Event):
     def __init__(self, dealID, instID, defaultDate, amount, recovery=0):
         Event.__init__(dealID, instID, refDate=defaultDate, refAmt=amount, refYield=recovery)
-        self.comment = '{0} default confirmed with recovery rate of {1} as of {2}'.format(self.instID, self.refYield, self.refDate)
+        self.comment = u'违约确认，回收比例估计{1}'.format(self.instID, self.refYield)
 
     def posChange(self, asOfDate):
         if asOfDate > self.timestamp:
@@ -169,7 +154,7 @@ class DefaultEvent(Event):
 class CloseEvent(Event):
     def __init__(self, dealID, instID, closeDate, amount, closePrice, closeYield=0):
         Event.__init__(self, dealID, instID, refDate=closeDate, refAmt=amount, refPrice=closePrice, refYield=closeYield)
-        self.comment = '{0} close: {1} units @ {2}'.format(self.instID, self.refAmount, self.refYield or self.refPrice)
+        self.comment = u'平仓：{1}单位，价格{2}'.format(self.instID, self.refAmount, self.refYield or self.refPrice)
 
     def typeID(self):
         return EVENT_TYPE.CLOSE
@@ -177,7 +162,7 @@ class CloseEvent(Event):
 class CloseSettleEvent(Event):
     def __init__(self, dealID, instID, settleDate, amount, settlePrice, settleYield=0):
         Event.__init__(self, dealID, instID, refDate=settleDate, refAmt=amount, refPrice=settlePrice, refYield=settleYield)
-        self.comment = '{0} close settle: {1} units @ {2}'.format(self.instID, self.refAmount, self.refYield or self.refPrice)
+        self.comment = u'平仓成交：{1}单位，价格{2}'.format(self.instID, self.refAmount, self.refYield or self.refPrice)
 
     def posChange(self, asOfDate):
         if asOfDate > self.timestamp:
@@ -191,7 +176,7 @@ class CloseSettleEvent(Event):
 class CashFlowEvent(Event):
     def __init__(self, dealID, instID, cfDate, amount):
         Event.__init__(self, dealID, instID, refDate=cfDate, refAmt=amount)
-        self.comment = 'cash flow: {0} as of {1}'.format(self.refAmount, self.refAmount)
+        self.comment = u'现金流：{0}'.format(self.refAmount)
 
     def posChange(self, asOfDate):
         if asOfDate > self.timestamp:
@@ -204,7 +189,7 @@ class CashFlowEvent(Event):
 class CouponEvent(CashFlowEvent):
     def __init__(self, dealID, instID, cfDate, amount):
         CashFlowEvent.__init__(self, dealID, instID, cfDate, amount)
-        self.comment = '{0} coupon: {1}'.format(self.instID, self.refAmount)
+        self.comment = u'付息：{1}'.format(self.refAmount)
 
     def typeID(self):
         return EVENT_TYPE.COUPON
@@ -273,28 +258,21 @@ class Deal:
                 self.events.append(Event.fromDB(eventID, dealID, instID, timestamp, eventType, signer,
                                                 signedAt, cancelled, comment, refDate, refAmount, refPrice, refYield))
 
-    def bookToDB(self, dbconn):
-        if dbconn:
-            cursor = dbconn.cursor()
-            try:
-                cursor.execute("""INSERT INTO DEALS VALUES (%s,%s,%s,%s)""",
-                               (self.dealID, self.book.id, self.events[0].timestamp, None))
-                dbconn.commit()
-            except Exception, e:
-                print e.message
-                dbconn.rollback()
-            cursor.close()
+    def bookToDB(self):
+        q = QtSql.QSqlQuery()
+        try:
+            q.exec_("""INSERT INTO DEALS VALUES (%s,%s,%s,%s)""" %
+                           (self.dealID, self.book.id, self.events[0].timestamp, None))
+            QtSql.QSqlDatabase().commit()
+        except Exception, e:
+            print e.message
+            QtSql.QSqlDatabase().rollback()
 
-    def closeOnDB(self, dbconn):
-        if dbconn:
-            c = dbconn.cursor()
-            try:
-                query = """UPDATE DEALS SET CLOSE='%s' WHERE ID='%s'""" % (self.events[-1].timestamp)
-                print query
-                c.execute(query)
-                dbconn.commit()
-            finally:
-                c.close()
+    def closeOnDB(self):
+        q = QtSql.QSqlQuery()
+        query = """UPDATE DEALS SET CLOSE='%s' WHERE ID='%s'""" % (self.events[-1].timestamp)
+        q.exec_(query)
+        QtSql.QSqlDatabase().commit()
 
     def positions(self, asOfDate, sync = None):
         if sync is None:
@@ -314,7 +292,7 @@ class Deal:
                             pos[k] = pd[k]
         return pos
 
-    def close(self, user, instID, closePrice, amount = None, settleDate = None, sync = None, dbconn=None):
+    def close(self, user, instID, closePrice, amount = None, settleDate = None, sync = None):
         pos = self.positions(datetime.datetime.now(), sync)
         posAmount = pos.get(instID, 0)
         closeAmount = amount or posAmount
@@ -322,13 +300,13 @@ class Deal:
             raise ValueError('Oversell: {0} hold {1} units, but try to sell {2} units'.format(instID, posAmount, closeAmount))
         ce = CloseEvent(self.dealID, instID, None, closeAmount, closePrice)
         ce.sign(user)
-        ce.bookToDB(dbconn)
+        ce.bookToDB()
         self.events.append(ce)
         se = CloseSettleEvent(self.dealID, instID, settleDate or datetime.datetime.now(), closeAmount, closePrice)
-        se.bookToDB(dbconn)
+        se.bookToDB()
         self.events.append(se)
         if abs(closeAmount - posAmount) < 0.0001:
-            self.closeOnDB(dbconn)
+            self.closeOnDB()
 
 if __name__ == '__main__':
     import env
