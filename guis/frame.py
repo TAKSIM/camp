@@ -17,39 +17,39 @@ class Desktop(QtGui.QMainWindow):
     def __init__(self):
         QtGui.QMainWindow.__init__(self)
         self.initDB()
+        login = LoginPage()
+        if login.exec_():
+            self.user = env.User(str(login.username.text()))
+            self.initFromDB()
 
-        self.login = LoginPage()
-        self.login.loginSuccess.connect(self.launch)
-        self.launch.connect(self.show)
-        self.login.show()
+            self.createToolBox()
+            self.createAction()
+            self.createMenu()
+            self.createSystemTray()
 
-        self.initFromDB()
+            self.msgPanel = sorttest.Window()
+            layout = QtGui.QVBoxLayout()
+            mainLayout = QtGui.QHBoxLayout()
+            mainLayout.addWidget(self.toolBox)
+            self.panel = QtGui.QWidget()
+            self.layoutOverview = self.createOverviewLayout()
+            self.panel.setLayout(self.layoutOverview)
 
-        self.createToolBox()
-        self.createAction()
-        self.createMenu()
-        self.createSystemTray()
+            mainLayout.addWidget(self.panel)
+            layout.addLayout(mainLayout)
+            layout.addWidget(self.msgPanel)
 
-        self.msgPanel = sorttest.Window()
-        layout = QtGui.QVBoxLayout()
-        mainLayout = QtGui.QHBoxLayout()
-        mainLayout.addWidget(self.toolBox)
-        self.panel = QtGui.QWidget()
-        self.layoutOverview = self.createOverviewLayout()
-        self.panel.setLayout(self.layoutOverview)
+            self.centralWidget = QtGui.QWidget()
+            self.centralWidget.setLayout(layout)
+            self.setCentralWidget(self.centralWidget)
+            self.resize(800, 600)
+            self.setWindowTitle(u'固定收益部交易管理平台 - {0}'.format(self.user.name))
+            self.setWindowIcon(QtGui.QIcon(env.sysIcon))
 
-        mainLayout.addWidget(self.panel)
-        layout.addLayout(mainLayout)
-        layout.addWidget(self.msgPanel)
-
-        self.centralWidget = QtGui.QWidget()
-        self.centralWidget.setLayout(layout)
-        self.setCentralWidget(self.centralWidget)
-        self.resize(800, 600)
-        self.setWindowTitle(u'固定收益部交易管理平台 - {0}'.format(self.user.name))
-        self.setWindowIcon(QtGui.QIcon(env.sysIcon))
-
-        self.statusBar().showMessage(u'准备就绪')
+            self.statusBar().showMessage(u'准备就绪')
+            self.show()
+        else:
+            QtGui.qApp.quit()
 
     def initDB(self, host='caitcfid.mysql.rds.aliyuncs.com', port=3306, dbname='secs'):
         self.db = QtSql.QSqlDatabase.addDatabase('QMYSQL')
@@ -77,7 +77,7 @@ class Desktop(QtGui.QMainWindow):
         self.deals = []
         q.exec_('SELECT * FROM DEALS')
         while q.next():
-            d = q.value(0).toString()
+            d = str(q.value(0).toString())
             b = q.value(1).toInt()[0]
             thisDeal = Deal(d, b)
             self.deals.append(thisDeal)

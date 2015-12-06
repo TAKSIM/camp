@@ -257,15 +257,15 @@ class Deal:
             while q.next():
                 self.events = []
 
-                eventID = q.value(0).toString()
-                dealID = q.value(1).toString()
-                instID = q.value(2).toString()
+                eventID = str(q.value(0).toString())
+                dealID = str(q.value(1).toString())
+                instID = str(q.value(2).toString())
                 timestamp = q.value(3).toDateTime()
                 eventType = q.value(4).toInt()[0]
-                signer = q.value(5).toString()
-                signedAt = q.value(6).toString()
+                signer = str(q.value(5).toString())
+                signedAt = str(q.value(6).toString())
                 cancelled = q.value(7).toBool()
-                comment = q.value(8).toString()
+                comment = str(q.value(8).toString())
                 refDate = q.value(9).toDate()
                 refAmount = q.value(10).toDouble()[0]
                 refPrice = q.value(11).toDouble()[0]

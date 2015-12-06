@@ -28,14 +28,15 @@ def enum(**enums):
 
 class User:
     def __init__(self, id):
+        self.id = None
         q = QtSql.QSqlQuery()
         q.exec_('SELECT * FROM USERS WHERE ID={}'.format(id))
         while q.next():
-            self.id = id
-            self.name = q.value(1).toString()
-            self.email = q.value(2).toString()
+            self.id = str(q.value(0).toString())
+            self.name = str(q.value(1).toString())
+            self.email = str(q.value(2).toString())
             self.role = q.value(3).toInt()[0]
-            self.pwd = q.value(4).toString()
+            self.pwd = str(q.value(4).toString())
             self.pwdtmp = q.value(5).toInt()[0]
 
     def needPwdReset(self):
@@ -50,7 +51,7 @@ class User:
         query = """UPDATE USERS SET PWD='%s', PWD_TEMP=0 WHERE ID=%s""" % (hex, self.id)
         print query
         q.exec_(query)
-        QtSql.QSqlDatabase.commit()
+        QtSql.QSqlDatabase().commit()
         self.pwd = hex
 
     def initPwd(self):
@@ -63,6 +64,6 @@ class User:
         q = QtSql.QSqlQuery()
         query = """UPDATE USERS SET PWD='%s', PWD_TEMP=1 WHERE ID=%s""" % (hex, self.id)
         q.exec_(query)
-        QtSql.QSqlDatabase.commit()
+        QtSql.QSqlDatabase().commit()
         self.pwd = hex
 

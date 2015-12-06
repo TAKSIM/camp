@@ -2,15 +2,13 @@
 from PyQt4 import QtGui, QtCore
 from env import User
 
-class LoginPage(QtGui.QWidget):
-
-    loginSuccess = QtCore.pyqtSignal()
+class LoginPage(QtGui.QDialog):
 
     def __init__(self):
-        QtGui.QWidget.__init__(self)
+        QtGui.QDialog.__init__(self)
         self.setWindowTitle(u'系统登录')
         self.setWindowIcon(QtGui.QIcon(u'icons\login.png'))
-        self.setFixedSize(180,100)
+        self.setFixedSize(180,120)
 
         layout = QtGui.QVBoxLayout()
         inputLayout = QtGui.QHBoxLayout()
@@ -40,49 +38,50 @@ class LoginPage(QtGui.QWidget):
         btLayout.addWidget(self.btReset)
         layout.addLayout(btLayout)
 
+        self.status = QtGui.QLabel()
+        layout.addWidget(self.status)
+
         self.setLayout(layout)
 
-        self.resetPage = None
-
     def login(self):
-        usr = self.username.text()
+        usr = str(self.username.text())
         if len(usr) == 0:
-            QtGui.QMessageBox.warning(None, u'登陆错误', u'用户名不能为空')
+            self.status.setText(u'登陆错误，用户名不能为空')
         else:
             u = User(usr)
             if u.id is None:
-                QtGui.QMessageBox.warning(None, u'登录错误', u'无此用户')
+                self.status.setText(u'登陆错误，非注册用户')
             else:
                 if not u.checkPwd(str(self.pwd.text())):
-                    QtGui.QMessageBox.warning(None, u'登陆错误', u'密码错误')
+                    self.status.setText(u'登陆错误，密码错误')
                 else:
-                    self.loginSuccess.emit()
-                    self.close()
+                    #self.loginSuccess.emit()
+                    self.accept()
 
     def resetPwd(self):
-        usr = self.username.text()
+        usr = str(self.username.text())
         if len(usr) == 0:
-            QtGui.QMessageBox.warning(None, u'登陆错误', u'用户名不能为空')
+            self.status.setText(u'登陆错误，用户名不能为空')
         else:
             u = User(usr)
             if u.id is None:
-                QtGui.QMessageBox.warning(None, u'登录错误', u'无此用户')
+                self.status.setText(u'登陆错误，非注册用户')
             else:
                 u.initPwd()
-                self.resetPage = ResetPage(u)
-                self.resetPage.sgOK.connect(self.loginOK)
-                self.resetPage.show()
+                resetPage = ResetPage(u)
+                if resetPage.exec_():
+                    self.show()
 
-    def loginOK(self):
-        self.loginSuccess.emit()
-        self.close()
+    # def loginOK(self):
+    #     self.loginSuccess.emit()
+    #     self.close()
 
-class ResetPage(QtGui.QWidget):
+class ResetPage(QtGui.QDialog):
 
-    sgOK = QtCore.pyqtSignal()
+    #sgOK = QtCore.pyqtSignal()
 
     def __init__(self, user):
-        QtGui.QWidget.__init__(self)
+        QtGui.QDialog.__init__(self)
         self.setWindowTitle(u'重置登录密码')
         self.setWindowIcon(QtGui.QIcon(u'icons\login.png'))
         self.setFixedSize(200, 130)
@@ -117,8 +116,8 @@ class ResetPage(QtGui.QWidget):
                 confPwd = self.confPwd.text()
                 if newPwd == confPwd:
                     self.user.resetPwd(newPwd)
-                    self.sgOK.emit()
-                    self.close()
+                    #self.sgOK.emit()
+                    self.accept()
                 else:
                     QtGui.QMessageBox.warning(None, u'错误', u'两次输入的密码不一致')
         else:
@@ -130,9 +129,6 @@ if __name__ == '__main__':
     import sys
     import env
     app = QtGui.QApplication(sys.argv)
-    db = env.Dbconfig('hewei', 'wehea1984')
-    db.Connect()
-    u = User('000705', db.conn)
-    w = ResetPage(db.conn, u)
+    w = LoginPage()
     w.show()
     sys.exit(app.exec_())
