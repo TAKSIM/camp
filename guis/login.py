@@ -55,7 +55,6 @@ class LoginPage(QtGui.QDialog):
                 if not u.checkPwd(str(self.pwd.text())):
                     self.status.setText(u'登陆错误，密码错误')
                 else:
-                    #self.loginSuccess.emit()
                     self.accept()
 
     def resetPwd(self):
@@ -72,13 +71,7 @@ class LoginPage(QtGui.QDialog):
                 if resetPage.exec_():
                     self.show()
 
-    # def loginOK(self):
-    #     self.loginSuccess.emit()
-    #     self.close()
-
 class ResetPage(QtGui.QDialog):
-
-    #sgOK = QtCore.pyqtSignal()
 
     def __init__(self, user):
         QtGui.QDialog.__init__(self)
@@ -116,7 +109,6 @@ class ResetPage(QtGui.QDialog):
                 confPwd = self.confPwd.text()
                 if newPwd == confPwd:
                     self.user.resetPwd(newPwd)
-                    #self.sgOK.emit()
                     self.accept()
                 else:
                     QtGui.QMessageBox.warning(None, u'错误', u'两次输入的密码不一致')
@@ -127,7 +119,6 @@ class ResetPage(QtGui.QDialog):
 
 if __name__ == '__main__':
     import sys
-    import env
     app = QtGui.QApplication(sys.argv)
     w = LoginPage()
     w.show()

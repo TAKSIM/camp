@@ -252,28 +252,26 @@ class Deal:
             self.bookToDB(dbconn)
         else:
             dealID, book = args
+            self.events = []
             q = QtSql.QSqlQuery()
             q.exec_("""SELECT * FROM EVENTS WHERE DEAL_ID='%s' ORDER BY TIME_STAMP""" % (dealID,))
             while q.next():
-                self.events = []
-
-                eventID = str(q.value(0).toString())
-                dealID = str(q.value(1).toString())
-                instID = str(q.value(2).toString())
+                eventID = q.value(0).toString()
+                dealID = q.value(1).toString()
+                instID = q.value(2).toString()
                 timestamp = q.value(3).toDateTime()
                 eventType = q.value(4).toInt()[0]
-                signer = str(q.value(5).toString())
-                signedAt = str(q.value(6).toString())
+                signer = q.value(5).toString()
+                signedAt = q.value(6).toString()
                 cancelled = q.value(7).toBool()
-                comment = str(q.value(8).toString())
+                comment = q.value(8).toString()
                 refDate = q.value(9).toDate()
                 refAmount = q.value(10).toDouble()[0]
                 refPrice = q.value(11).toDouble()[0]
                 refYield = q.value(12).toDouble()[0]
 
-                thisEvent = Event.fromDB(eventID, dealID, instID, timestamp, eventType, signer, signedAt, cancelled,
-                                         comment, refDate, refAmount, refPrice, refYield)
-                self.events.append(thisEvent)
+                self.events.append(Event.fromDB(eventID, dealID, instID, timestamp, eventType, signer,
+                                                signedAt, cancelled, comment, refDate, refAmount, refPrice, refYield))
 
     def bookToDB(self, dbconn):
         if dbconn:
@@ -331,37 +329,6 @@ class Deal:
         self.events.append(se)
         if abs(closeAmount - posAmount) < 0.0001:
             self.closeOnDB(dbconn)
-
-# def LoadBooks(dbconn):
-#     c = dbconn.cursor()
-#     c.execute('SELECT * FROM BOOKS')
-#     bs = c.fetchall()
-#     c.close()
-#     books = [Book(b[0],b[1],b[3],b[2],b[4]) for b in bs]
-#     return books
-
-# def LoadDeals(dbconn, bookID = None, liveOnly=True):
-#     if dbconn:
-#         c = dbconn.cursor()
-#         try:
-#             query = 'SELECT * FROM DEALS'
-#             cond = []
-#             if bookID:
-#                 cond.append("""BOOK='%s'""" % (bookID))
-#             if liveOnly:
-#                 cond.append("""CLOSE IS NULL""")
-#             if cond:
-#                 query += ' WHERE ' + ','.join(cond)
-#             c.execute(query)
-#             data = c.fetchall()
-#             ds = []
-#             for deal in data:
-#                 d, b, _, _ = deal
-#                 thisDeal = Deal(d, b, dbconn=dbconn)
-#                 ds.append(thisDeal)
-#             return ds
-#         finally:
-#             c.close()
 
 if __name__ == '__main__':
     import env

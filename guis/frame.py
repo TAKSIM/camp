@@ -12,7 +12,7 @@ def createLabel(text):
 
 class Desktop(QtGui.QMainWindow):
 
-    launch = QtCore.pyqtSignal()
+    #launch = QtCore.pyqtSignal()
 
     def __init__(self):
         QtGui.QMainWindow.__init__(self)
@@ -79,8 +79,7 @@ class Desktop(QtGui.QMainWindow):
         while q.next():
             d = str(q.value(0).toString())
             b = q.value(1).toInt()[0]
-            thisDeal = Deal(d, b)
-            self.deals.append(thisDeal)
+            self.deals.append(Deal(d, b))
 
     def createMenu(self):
         self.mb = self.menuBar()
@@ -208,14 +207,18 @@ class Desktop(QtGui.QMainWindow):
         self.gbFilter.setLayout(layoutFilter)
         layout.addWidget(self.gbFilter)
 
-        self.actView = QtGui.QTableWidget()
-        self.actView.setColumnCount(5)
-        self.actView.setHorizontalHeaderLabels([u'仓位',u'数量',u'买/卖',u'开仓价格',u'到期收益率'])
-        #self.actView.insertRow([1,2,3,4,5])
+        self.actView = QtGui.QTableView()
+        self.eventModel = QtSql.QSqlQueryModel()
+        self.eventModel.setQuery('SELECT INST_ID, EVENT_TYPE, REF_AMOUNT, REF_YIELD, COMMENT, SIGNER, TIME_STAMP FROM EVENTS')
+        self.actView.setModel(self.eventModel)
+
         self.actView.resizeColumnsToContents()
         self.actView.resizeRowsToContents()
-        #self.actView.hideColumn(0)
-        #self.actView.populate()
+        self.actView.verticalHeader().hide()
+        # self.actView.setColumnCount(5)
+        # self.actView.setHorizontalHeaderLabels([u'仓位',u'数量',u'买/卖',u'开仓价格',u'到期收益率'])
+        # self.actView.resizeColumnsToContents()
+        # self.actView.resizeRowsToContents()
 
         layout.addWidget(self.actView)
         return layout
