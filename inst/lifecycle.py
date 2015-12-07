@@ -54,7 +54,7 @@ class Event:
     def eventName(self):
         raise NotImplementedError('Should not reach this level')
 
-    def sign(self, user, comment='', dbconn=None):
+    def sign(self, user, comment=''):
         self.by = user.name
         self.at = datetime.datetime.now()
         if comment:
@@ -113,9 +113,9 @@ class Event:
         raise NotImplementedError()
 
 class OpenEvent(Event):
-    def __init__(self, dealID, instID, bookDate, amount, tradePrice, tradeYield=0):
+    def __init__(self, dealID, instID, bookDate, amount, tradePrice, tradeYield=0, comment=''):
         Event.__init__(self, dealID, instID, refDate=bookDate, refAmt=amount, refPrice=tradePrice, refYield=tradeYield)
-        self.comment = u'开仓：{1}单位，成本{2}'.format(self.instID, self.refAmount, self.refYield or self.refPrice)
+        self.comment = comment or u'开仓：{1}单位，成本{2}'.format(self.instID, self.refAmount, self.refYield or self.refPrice)
 
     def posChange(self, asOfDate):
         if asOfDate > self.timestamp:
@@ -125,9 +125,9 @@ class OpenEvent(Event):
         return EVENT_TYPE.OPEN
 
 class OpenSettleEvent(Event):
-    def __init__(self, dealID, instID, settleDate, amount, settlePrice, settleYield=0):
+    def __init__(self, dealID, instID, settleDate, amount, settlePrice, settleYield=0, comment=''):
         Event.__init__(self, dealID, instID, refDate=settleDate, refAmt=amount, refPrice=settlePrice, refYield=settleYield)
-        self.comment = u'开仓成交：{1}单位，成本{2}'.format(self.instID, self.refAmount, self.refYield or self.refPrice)
+        self.comment = comment or u'开仓成交：{1}单位，成本{2}'.format(self.instID, self.refAmount, self.refYield or self.refPrice)
 
     def posChange(self, asOfDate):
         if asOfDate > self.timestamp:
@@ -138,9 +138,9 @@ class OpenSettleEvent(Event):
         return EVENT_TYPE.OPEN_SETTLE
 
 class DefaultEvent(Event):
-    def __init__(self, dealID, instID, defaultDate, amount, recovery=0):
+    def __init__(self, dealID, instID, defaultDate, amount, recovery=0, comment=''):
         Event.__init__(dealID, instID, refDate=defaultDate, refAmt=amount, refYield=recovery)
-        self.comment = u'违约确认，回收比例估计{1}'.format(self.instID, self.refYield)
+        self.comment = comment or u'违约确认，回收比例估计{1}'.format(self.instID, self.refYield)
 
     def posChange(self, asOfDate):
         if asOfDate > self.timestamp:
@@ -152,17 +152,17 @@ class DefaultEvent(Event):
         return EVENT_TYPE.DEFAULT
 
 class CloseEvent(Event):
-    def __init__(self, dealID, instID, closeDate, amount, closePrice, closeYield=0):
+    def __init__(self, dealID, instID, closeDate, amount, closePrice, closeYield=0, comment=''):
         Event.__init__(self, dealID, instID, refDate=closeDate, refAmt=amount, refPrice=closePrice, refYield=closeYield)
-        self.comment = u'平仓：{1}单位，价格{2}'.format(self.instID, self.refAmount, self.refYield or self.refPrice)
+        self.comment = comment or u'平仓：{1}单位，价格{2}'.format(self.instID, self.refAmount, self.refYield or self.refPrice)
 
     def typeID(self):
         return EVENT_TYPE.CLOSE
 
 class CloseSettleEvent(Event):
-    def __init__(self, dealID, instID, settleDate, amount, settlePrice, settleYield=0):
+    def __init__(self, dealID, instID, settleDate, amount, settlePrice, settleYield=0, comment=''):
         Event.__init__(self, dealID, instID, refDate=settleDate, refAmt=amount, refPrice=settlePrice, refYield=settleYield)
-        self.comment = u'平仓成交：{1}单位，价格{2}'.format(self.instID, self.refAmount, self.refYield or self.refPrice)
+        self.comment = comment or u'平仓成交：{1}单位，价格{2}'.format(self.instID, self.refAmount, self.refYield or self.refPrice)
 
     def posChange(self, asOfDate):
         if asOfDate > self.timestamp:
@@ -174,9 +174,9 @@ class CloseSettleEvent(Event):
         return EVENT_TYPE.CLOSE_SETTLE
 
 class CashFlowEvent(Event):
-    def __init__(self, dealID, instID, cfDate, amount):
+    def __init__(self, dealID, instID, cfDate, amount, comment=''):
         Event.__init__(self, dealID, instID, refDate=cfDate, refAmt=amount)
-        self.comment = u'现金流：{0}'.format(self.refAmount)
+        self.comment = comment or u'现金流：{0}'.format(self.refAmount)
 
     def posChange(self, asOfDate):
         if asOfDate > self.timestamp:
@@ -188,8 +188,8 @@ class CashFlowEvent(Event):
 
 class CouponEvent(CashFlowEvent):
     def __init__(self, dealID, instID, cfDate, amount):
-        CashFlowEvent.__init__(self, dealID, instID, cfDate, amount)
-        self.comment = u'付息：{1}'.format(self.refAmount)
+        CashFlowEvent.__init__(self, dealID, instID, cfDate, amount, comment='')
+        self.comment = comment or u'付息：{1}'.format(self.refAmount)
 
     def typeID(self):
         return EVENT_TYPE.COUPON
@@ -211,7 +211,7 @@ class Deal:
             user, bookID, instID, bookDate, settleDate, amount, tradePrice = args
             dealID = kwargs.get('dealID', None)
             shortable = kwargs.get('shortable', False)
-            dbconn = kwargs.get('dbconn', None)
+            comment = kwargs.get('comment', '')
             self.bookID = bookID
             if dealID:
                 self.dealID = dealID
@@ -225,16 +225,16 @@ class Deal:
                 self.dealID = m.hexdigest()
             self.shortable = shortable
             self.settleDate = settleDate
-            oe = OpenEvent(self.dealID, instID, bookDate, amount, tradePrice)
+            oe = OpenEvent(self.dealID, instID, bookDate, amount, tradePrice, comment=comment)
             oe.sign(user,  '{0} open: {1}'.format(instID, str(amount)))
-            oe.bookToDB(dbconn)
+            oe.bookToDB()
             self.events = [oe]
 
             se = OpenSettleEvent(self.dealID, instID, settleDate, amount, tradePrice)
-            se.bookToDB(dbconn)
+            se.bookToDB()
             self.events.append(se)
 
-            self.bookToDB(dbconn)
+            self.bookToDB()
         else:
             dealID, book = args
             self.events = []
@@ -292,17 +292,17 @@ class Deal:
                             pos[k] = pd[k]
         return pos
 
-    def close(self, user, instID, closePrice, amount = None, settleDate = None, sync = None):
+    def close(self, user, instID, closePrice, amount = None, settleDate = None, sync = None, comment=''):
         pos = self.positions(datetime.datetime.now(), sync)
         posAmount = pos.get(instID, 0)
         closeAmount = amount or posAmount
         if closeAmount > posAmount and not self.shortable:
             raise ValueError('Oversell: {0} hold {1} units, but try to sell {2} units'.format(instID, posAmount, closeAmount))
-        ce = CloseEvent(self.dealID, instID, None, closeAmount, closePrice)
+        ce = CloseEvent(self.dealID, instID, None, closeAmount, closePrice, comment=comment)
         ce.sign(user)
         ce.bookToDB()
         self.events.append(ce)
-        se = CloseSettleEvent(self.dealID, instID, settleDate or datetime.datetime.now(), closeAmount, closePrice)
+        se = CloseSettleEvent(self.dealID, instID, settleDate or datetime.datetime.now(), closeAmount, closePrice, comment=comment)
         se.bookToDB()
         self.events.append(se)
         if abs(closeAmount - posAmount) < 0.0001:

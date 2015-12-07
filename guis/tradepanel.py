@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-
-from PyQt4 import QtGui, Qt, QtCore
+from WindPy import *
+from PyQt4 import QtGui, QtSql
 import datetime
 
 class DepoPanel(QtGui.QDialog):
@@ -8,22 +8,103 @@ class DepoPanel(QtGui.QDialog):
         QtGui.QDialog.__init__(self, parent)
         self.setWindowTitle(u'同业存款')
         self.setWindowIcon(QtGui.QIcon('icons/tent.png'))
+        self.setFixedSize(200,250)
+
         layout = QtGui.QGridLayout()
-        layout.addWidget(QtGui.QLabel(u'账簿'), 0, 0, 1, 1)
+        layout.addWidget(QtGui.QLabel(u'交易日'), 0,0,1,1)
+        self.tradeDate = QtGui.QDateEdit(datetime.datetime.today())
+        self.tradeDate.setCalendarPopup(True)
+        layout.addWidget(self.tradeDate, 0, 1, 1, 2)
+        layout.addWidget(QtGui.QLabel(u'账簿'), 1, 0, 1, 1)
         dbBooks = QtGui.QComboBox()
         dbBooks.addItems([b.name_cn_short for b in books])
-        layout.addWidget(dbBooks, 0, 1, 1, 1)
-        layout.addWidget(QtGui.QLabel(u'规模（万元）'), 1, 0, 1, 1)
-        self.size = QtGui.QLineEdit()
-        layout.addWidget(self.size, 1, 1, 1, 1)
-        layout.addWidget(QtGui.QLabel(u'收益率（%）'), 2, 0, 1, 1)
+        layout.addWidget(dbBooks, 1, 1, 1, 2)
+        layout.addWidget(QtGui.QLabel(u'规模（万元）'), 2, 0, 1, 1)
+        self.amount = QtGui.QLineEdit()
+        layout.addWidget(self.amount, 2, 1, 1, 2)
+        layout.addWidget(QtGui.QLabel(u'收益率（%）'), 3, 0, 1, 1)
         self.price = QtGui.QLineEdit()
-        layout.addWidget(self.price, 2, 1, 1, 1)
-        layout.addWidget(QtGui.QLabel(u'期限'), 3, 0, 1, 1)
-        self.length = QtGui.QLineEdit()
+        layout.addWidget(self.price, 3, 1, 1, 2)
+        layout.addWidget(QtGui.QLabel(u'到期日'),4,0,1,1)
+        self.matDate = QtGui.QDateEdit(datetime.datetime.today())
+        self.matDate.setCalendarPopup(True)
+        layout.addWidget(self.matDate,4,1,1,2)
+        layout.addWidget(QtGui.QLabel(u'计息方式'),5,0,1,1)
+        self.dcc = QtGui.QComboBox()
+        self.dcc.addItem('Act/360')
+        layout.addWidget(self.dcc, 5, 1, 1, 2)
+        layout.addWidget(QtGui.QLabel(u'备注'), 6,0,1,1)
+        self.comment = QtGui.QLineEdit()
+        layout.addWidget(self.comment, 6,1,1,2)
 
+        buttonLayout = QtGui.QHBoxLayout()
+        self.ok = QtGui.QPushButton(u'确定')
+        self.ok.clicked.connect(self.bookToDB)
+        self.cancel = QtGui.QPushButton(u'取消')
+        self.cancel.clicked.connect(self.close)
+        buttonLayout.addWidget(self.ok)
+        buttonLayout.addWidget(self.cancel)
+        layout.addLayout(buttonLayout,7,0,1,3)
 
         self.setLayout(layout)
+
+    def bookToDB(self):
+        if self.matDate <= self.tradeDate:
+            QtGui.QMessageBox.about(self, u"错误", u"到期日需要晚于交易日")
+        else:
+            q = QtSql.QSqlQuery()
+            try:
+                q.exec_('')
+                QtSql.QSqlDatabase().commit()
+                self.accept()
+            except Exception, e:
+                print e.message
+                QtSql.QSqlDatabase().rollback()
+
+class MmfPanel(QtGui.QDialog):
+    def __init__(self, books, parent=None):
+        QtGui.QDialog.__init__(self, parent)
+        self.setWindowTitle(u'货币基金')
+        self.setWindowIcon(QtGui.QIcon('icons/tent.png'))
+        self.setFixedSize(200,250)
+
+        layout = QtGui.QGridLayout()
+        layout.addWidget(QtGui.QLabel(u'交易日'),0,0,1,1)
+        self.tradeDate = QtGui.QDateEdit(datetime.datetime.today())
+        self.tradeDate.setCalendarPopup(True)
+        layout.addWidget(self.tradeDate,0,1,1,2)
+        layout.addWidget(QtGui.QLabel(u'账簿'),1,0,1,1)
+        self.books = QtGui.QComboBox()
+        self.books.addItems([b.name_cn_short for b in books])
+        layout.addWidget(self.books, 1,1,1,2)
+        layout.addWidget(QtGui.QLabel(u'基金代号'),2,0,1,1)
+        self.code = QtGui.QLineEdit()
+        self.code.textChanged.connect(self.updateName)
+        layout.addWidget(self.code,2,1,1,2)
+        layout.addWidget(QtGui.QLabel(u'基金名称'),3,0,1,1)
+        self.name = QtGui.QLineEdit()
+        self.name.setEchoMode(False)
+        layout.addWidget(self.name,3,1,1,2)
+        layout.addWidget(QtGui.QLabel(u'规模（万元）'),4,0,1,1)
+        self.amount = QtGui.QLineEdit()
+        layout.addWidget(self.amount,4,1,1,2)
+        layout.addWidget(QtGui.QLabel(u'备注'),5,0,1,1)
+        self.comment = QtGui.QLineEdit()
+        layout.addWidget(self.comment,5,1,1,2)
+
+        buttonLayout = QtGui.QHBoxLayout()
+        self.ok = QtGui.QPushButton(u'确定')
+        self.cancel = QtGui.QPushButton(u'取消')
+        self.cancel.clicked.connect(self.close)
+        buttonLayout.addWidget(self.ok)
+        buttonLayout.addWidget(self.cancel)
+        layout.addLayout(buttonLayout,6,0,1,3)
+
+        self.setLayout(layout)
+
+    def updateName(self):
+        code = str(self.code.text())
+        name = w.wss(code, 'Name')
 
 class BondPanel(QtGui.QDialog):
     def __init__(self, parent=None):

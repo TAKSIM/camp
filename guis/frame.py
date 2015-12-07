@@ -4,6 +4,7 @@ import env
 from inst.lifecycle import Book, Deal
 from PyQt4 import Qt, QtGui, QtCore, QtSql
 import sorttest
+from WindPy import *
 
 def createLabel(text):
     label = QtGui.QLabel(text)
@@ -43,8 +44,10 @@ class Desktop(QtGui.QMainWindow):
             self.setWindowTitle(u'固定收益部交易管理平台 - {0}'.format(self.user.name))
             self.setWindowIcon(QtGui.QIcon(env.sysIcon))
 
-            self.statusBar().showMessage(u'准备就绪')
             self.show()
+            self.statusBar().showMessage(u'启动万得链接')
+            w.start()
+            self.statusBar().showMessage(u'准备就绪')
         else:
             QtGui.qApp.quit()
 
@@ -87,6 +90,7 @@ class Desktop(QtGui.QMainWindow):
         m2 = self.mb.addMenu(u'&交易')
         m2.addAction(self.tradeBond)
         m2.addAction(self.tradeDepo)
+        m2.addAction(self.tradeMmf)
 
         m3 = self.mb.addMenu(u'&帮助')
         m3.addAction(self.aboutAction)
@@ -96,6 +100,8 @@ class Desktop(QtGui.QMainWindow):
         self.refreshAction = QtGui.QAction(QtGui.QIcon(r'icons\refresh.png'), u'刷新', self, triggered=self.refresh, shortcut='F5')
         self.tradeBond = QtGui.QAction(u'债券', self, shortcut='Ctrl+B', triggered=self.showBondPanel)
         self.tradeDepo = QtGui.QAction(u'同业存款', self, shortcut='Ctrl+D', triggered=self.showDepoPanel)
+        self.tradeMmf = QtGui.QAction(u'货币基金', self, shortcut='Ctrl+M', triggered=self.showMmfPanel)
+
         self.aboutAction = QtGui.QAction(u"关于CAMP", self, triggered=self.about)
 
         self.minimize = QtGui.QAction(u'最小化', self, triggered=self.hide)
@@ -112,6 +118,12 @@ class Desktop(QtGui.QMainWindow):
         import tradepanel
         bond = tradepanel.BondPanel()
         if bond.exec_():
+            pass
+
+    def showMmfPanel(self):
+        import tradepanel
+        mmf = tradepanel.MmfPanel(self.books)
+        if mmf.exec_():
             pass
 
     def refresh(self):
@@ -147,8 +159,8 @@ class Desktop(QtGui.QMainWindow):
 
     def closeEvent(self, event):
         if self.trayIcon.isVisible():
-            QtGui.QMessageBox.information(self, u"最小化",
-                    u"系统将最小化至系统托盘，如果退出请选择“系统->退出”")
+            # QtGui.QMessageBox.information(self, u"最小化",
+            #         u"系统将最小化至系统托盘，如果退出请选择“系统->退出”")
             self.hide()
             event.ignore()
 
