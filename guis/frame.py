@@ -86,6 +86,7 @@ class Desktop(QtGui.QMainWindow):
 
         m2 = self.mb.addMenu(u'&交易')
         m2.addAction(self.tradeBond)
+        m2.addAction(self.tradeDepo)
 
         m3 = self.mb.addMenu(u'&帮助')
         m3.addAction(self.aboutAction)
@@ -93,12 +94,25 @@ class Desktop(QtGui.QMainWindow):
     def createAction(self):
         self.exitAction = QtGui.QAction(QtGui.QIcon(r'icons\exit.png'), u'退出', self, triggered=QtGui.qApp.quit)
         self.refreshAction = QtGui.QAction(QtGui.QIcon(r'icons\refresh.png'), u'刷新', self, triggered=self.refresh, shortcut='F5')
-        self.tradeBond = QtGui.QAction(u'债券', self, shortcut='Ctrl+T')
+        self.tradeBond = QtGui.QAction(u'债券', self, shortcut='Ctrl+B', triggered=self.showBondPanel)
+        self.tradeDepo = QtGui.QAction(u'同业存款', self, shortcut='Ctrl+D', triggered=self.showDepoPanel)
         self.aboutAction = QtGui.QAction(u"关于CAMP", self, triggered=self.about)
 
         self.minimize = QtGui.QAction(u'最小化', self, triggered=self.hide)
         self.maximize = QtGui.QAction(u'最大化',self, triggered=self.showMaximized)
         self.restore = QtGui.QAction(u'还原', self, triggered=self.showNormal)
+
+    def showDepoPanel(self):
+        import tradepanel
+        depo = tradepanel.DepoPanel(self.books)
+        if depo.exec_():
+            pass
+
+    def showBondPanel(self):
+        import tradepanel
+        bond = tradepanel.BondPanel()
+        if bond.exec_():
+            pass
 
     def refresh(self):
         self.eventModel.query().exec_()

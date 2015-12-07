@@ -8,24 +8,6 @@ sysIcon = r'icons\tent.png'
 def enum(**enums):
     return type('Enum', (), enums)
 
-# class Dbconfig:
-#     def __init__(self, user, pwd, host='caitcfid.mysql.rds.aliyuncs.com', port=3306, dbname='secs'):
-#         self.user = user
-#         self.pwd = pwd
-#         self.host = host
-#         self.port = port
-#         self.dbname = dbname
-#         self.conn = None
-#
-#     def Connect(self):
-#         if self.conn is None:
-#             self.conn = MySQLdb.connect(host=self.host,user=self.user, passwd=self.pwd, db=self.dbname, port=self.port, charset='utf8')
-#
-#     def Close(self):
-#         if self.conn is not None:
-#             self.conn.close()
-#             self.conn = None
-
 class User:
     def __init__(self, id):
         self.id = None

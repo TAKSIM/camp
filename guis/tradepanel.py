@@ -3,9 +3,31 @@
 from PyQt4 import QtGui, Qt, QtCore
 import datetime
 
-class BondPanel(QtGui.QWidget):
+class DepoPanel(QtGui.QDialog):
+    def __init__(self, books, parent = None):
+        QtGui.QDialog.__init__(self, parent)
+        self.setWindowTitle(u'同业存款')
+        self.setWindowIcon(QtGui.QIcon('icons/tent.png'))
+        layout = QtGui.QGridLayout()
+        layout.addWidget(QtGui.QLabel(u'账簿'), 0, 0, 1, 1)
+        dbBooks = QtGui.QComboBox()
+        dbBooks.addItems([b.name_cn_short for b in books])
+        layout.addWidget(dbBooks, 0, 1, 1, 1)
+        layout.addWidget(QtGui.QLabel(u'规模（万元）'), 1, 0, 1, 1)
+        self.size = QtGui.QLineEdit()
+        layout.addWidget(self.size, 1, 1, 1, 1)
+        layout.addWidget(QtGui.QLabel(u'收益率（%）'), 2, 0, 1, 1)
+        self.price = QtGui.QLineEdit()
+        layout.addWidget(self.price, 2, 1, 1, 1)
+        layout.addWidget(QtGui.QLabel(u'期限'), 3, 0, 1, 1)
+        self.length = QtGui.QLineEdit()
+
+
+        self.setLayout(layout)
+
+class BondPanel(QtGui.QDialog):
     def __init__(self, parent=None):
-        QtGui.QWidget.__init__(self, parent)
+        QtGui.QDialog.__init__(self, parent)
         self.setWindowTitle(u'债券查询交易')
         self.setWindowIcon(QtGui.QIcon('icons/tent.png'))
         self.setFont(QtGui.QFont('SimHei',12, QtGui.QFont.Bold))
