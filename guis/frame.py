@@ -116,7 +116,7 @@ class Desktop(QtGui.QMainWindow):
 
     def showBondPanel(self):
         import tradepanel
-        bond = tradepanel.BondPanel()
+        bond = tradepanel.BondPanel(self.books)
         if bond.exec_():
             pass
 
