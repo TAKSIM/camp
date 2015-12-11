@@ -214,9 +214,18 @@ class BondPanel(QtGui.QDialog):
         self.ai = QtGui.QLineEdit()
         self.ai.setEnabled(False)
         tradeLayout.addWidget(self.ai,5,3,1,1)
-        tradeLayout.addWidget(QtGui.QLabel(u'备注'),6,0,1,1)
+        tradeLayout.addWidget(QtGui.QLabel(u'备注'),0,2,1,1)
         self.comment = QtGui.QLineEdit()
-        tradeLayout.addWidget(self.comment,6,1,1,3)
+        tradeLayout.addWidget(self.comment,0,3,1,1)
+
+        buttonLayout = QtGui.QHBoxLayout()
+        self.ok = QtGui.QPushButton(u'确定')
+        self.cancel = QtGui.QPushButton(u'取消')
+        self.cancel.clicked.connect(self.close)
+        buttonLayout.addWidget(self.ok)
+        buttonLayout.addWidget(self.cancel)
+        tradeLayout.addLayout(buttonLayout, 6,1,1,2)
+
         gbTrade.setLayout(tradeLayout)
         layout.addWidget(gbTrade)
 
@@ -252,7 +261,7 @@ class BondPanel(QtGui.QDialog):
             self.vdate.setDate(lastVDate)
         else:
             QtGui.QMessageBox.information(self, u'万得数据错误', str(data.ErrorCode))
-        v = w.wss(str(self.code.text()),','.join(['duration','modidura_cnbd']),'rptDate={0}'.format(format(lastVDate,'%Y%m%d')))
+        v = w.wss(str(self.code.text()),','.join(['yield_cnbd','duration']),'rptDate={0}'.format(format(lastVDate,'%Y%m%d')))
         if v.ErrorCode == 0:
             self.value.setText(format(v.Data[0][0], '.3f'))
             self.moddur.setText(format(v.Data[1][0], '.3f'))
@@ -260,7 +269,10 @@ class BondPanel(QtGui.QDialog):
             QtGui.QMessageBox.information(self, u'万得数据错误', str(v.ErrorCode))
 
     def updateValue(self):
-        w.wss(str(self.code.text()),)
+        newDate = self.vdate.date()
+        data = w.wss(str(self.code.text()),['yield_cnbd'],'rtpDate={0}'.format(newDate.toString('yyyyMMdd')))
+        if data.ErrorCode == 0 and data.Data[0][0]:
+            self.value.setText(format(data.Data[0][0],'.2f'))
 
 # class BondPanel(QtGui.QDialog):
 #     def __init__(self, parent=None):
