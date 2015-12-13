@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from WindPy import *
-from PyQt4 import QtGui, QtSql
+from PyQt4 import QtGui, QtSql, QtCore
 import datetime
 
 class DepoPanel(QtGui.QDialog):
@@ -112,6 +112,7 @@ class BondPanel(QtGui.QDialog):
         QtGui.QDialog.__init__(self, parent)
         self.setWindowTitle(u'债券现券')
         self.setWindowIcon(QtGui.QIcon('icons/tent.png'))
+        self.setFixedSize(200,300)
 
         layout = QtGui.QHBoxLayout()
 
@@ -224,7 +225,7 @@ class BondPanel(QtGui.QDialog):
         self.cancel.clicked.connect(self.close)
         buttonLayout.addWidget(self.ok)
         buttonLayout.addWidget(self.cancel)
-        tradeLayout.addLayout(buttonLayout, 6,1,1,2)
+        tradeLayout.addLayout(buttonLayout, 6,2,1,2)
 
         gbTrade.setLayout(tradeLayout)
         layout.addWidget(gbTrade)
@@ -273,6 +274,85 @@ class BondPanel(QtGui.QDialog):
         data = w.wss(str(self.code.text()),['yield_cnbd'],'rtpDate={0}'.format(newDate.toString('yyyyMMdd')))
         if data.ErrorCode == 0 and data.Data[0][0]:
             self.value.setText(format(data.Data[0][0],'.2f'))
+
+class HolidayPanel(QtGui.QDialog):
+    def __init__(self, parent=None):
+        QtGui.QDialog.__init__(self, parent)
+        self.setWindowTitle(u'假期设置')
+        self.setWindowIcon(QtGui.QIcon('icons/tent.png'))
+        self.setMaximumWidth(200)
+        layout = QtGui.QVBoxLayout()
+        self.holData = QtSql.QSqlTableModel()
+        self.holData.setTable('holidays')
+        self.holData.setEditStrategy(QtSql.QSqlTableModel.OnManualSubmit)
+        self.holData.select()
+        self.holData.setHeaderData(0, QtCore.Qt.Horizontal, u'日期')
+        self.holData.setHeaderData(1, QtCore.Qt.Horizontal, u'假期')
+        self.holData.setHeaderData(2, QtCore.Qt.Horizontal, u'状态')
+        self.holView = QtGui.QTableView()
+        self.holView.setModel(self.holData)
+        self.holView.resizeColumnsToContents()
+        self.holView.resizeRowsToContents()
+        self.holView.verticalHeader().hide()
+
+        buttonLayout = QtGui.QHBoxLayout()
+        self.btAdd = QtGui.QPushButton(u'添加假期')
+        self.btAdd.clicked.connect(self.newHol)
+        self.btConf = QtGui.QPushButton(u'确认修改')
+        self.btConf.clicked.connect(self.submit)
+        self.btCancel = QtGui.QPushButton(u'取消')
+        self.btCancel.clicked.connect(self.close)
+        buttonLayout.addWidget(self.btAdd)
+        buttonLayout.addWidget(self.btConf)
+        buttonLayout.addWidget(self.btCancel)
+        layout.addLayout(buttonLayout)
+
+        layout.addWidget(self.holView)
+        self.setLayout(layout)
+
+    def submit(self):
+        self.holData.submitAll()
+
+    def newHol(self):
+        nh = NewHolPanel()
+        if nh.exec_():
+            date = nh.date.date()
+            name = nh.nameList.currentText()
+            status = nh.statusList.currentText()
+            q = QtSql.QSqlQuery()
+            try:
+                q.exec_("""INSERT INTO HOLIDAYS VALUES ('%s','%s','%s')""" % (date.toPyDate(), name, status))
+                QtSql.QSqlDatabase().commit()
+            except Exception, e:
+                print e.message
+                QtSql.QSqlDatabase().rollback()
+
+class NewHolPanel(QtGui.QDialog):
+    def __init__(self, parent=None):
+        QtGui.QDialog.__init__(self, parent)
+        self.setWindowIcon(QtGui.QIcon('icons/tent.png'))
+        self.setWindowTitle(u'新增假期')
+        layout = QtGui.QGridLayout()
+        layout.addWidget(QtGui.QLabel(u'日期'),0,0,1,1)
+        self.date = QtGui.QDateEdit(datetime.datetime.today())
+        self.date.setCalendarPopup(True)
+        layout.addWidget(self.date,0,1,1,1)
+        layout.addWidget(QtGui.QLabel(u'假期'),1,0,1,1)
+        self.nameList = QtGui.QComboBox()
+        self.nameList.addItems([u'元旦',u'春节',u'清明节',u'劳动节',u'端午节',u'中秋节',u'国庆节',u'其他'])
+        self.nameList.setEditable(True)
+        layout.addWidget(self.nameList,1,1,1,1)
+        layout.addWidget(QtGui.QLabel(u'状态'),2,0,1,1)
+        self.statusList = QtGui.QComboBox()
+        self.statusList.addItems([u'预期',u'确定',u'工作'])
+        layout.addWidget(self.statusList,2,1,1,1)
+        self.ok = QtGui.QPushButton(u'确定')
+        self.ok.clicked.connect(self.accept)
+        layout.addWidget(self.ok,3,0,1,1)
+        self.cancel = QtGui.QPushButton(u'取消')
+        self.cancel.clicked.connect(self.close)
+        layout.addWidget(self.cancel,3,1,1,1)
+        self.setLayout(layout)
 
 # class BondPanel(QtGui.QDialog):
 #     def __init__(self, parent=None):

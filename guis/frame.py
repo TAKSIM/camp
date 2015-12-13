@@ -84,8 +84,9 @@ class Desktop(QtGui.QMainWindow):
     def createMenu(self):
         self.mb = self.menuBar()
         m1 = self.mb.addMenu(u'&系统')
-        m1.addAction(self.exitAction)
+        m1.addAction(self.holAction)
         m1.addAction(self.refreshAction)
+        m1.addAction(self.exitAction)
 
         m2 = self.mb.addMenu(u'&交易')
         m2.addAction(self.tradeBond)
@@ -98,6 +99,8 @@ class Desktop(QtGui.QMainWindow):
     def createAction(self):
         self.exitAction = QtGui.QAction(QtGui.QIcon(r'icons\exit.png'), u'退出', self, triggered=QtGui.qApp.quit)
         self.refreshAction = QtGui.QAction(QtGui.QIcon(r'icons\refresh.png'), u'刷新', self, triggered=self.refresh, shortcut='F5')
+        self.holAction = QtGui.QAction(QtGui.QIcon(r'icons\settings.png'), u'假期设置', self, shortcut='Ctrl+H', triggered=self.showHolidayPanel)
+
         self.tradeBond = QtGui.QAction(u'债券', self, shortcut='Ctrl+B', triggered=self.showBondPanel)
         self.tradeDepo = QtGui.QAction(u'同业存款', self, shortcut='Ctrl+D', triggered=self.showDepoPanel)
         self.tradeMmf = QtGui.QAction(u'货币基金', self, shortcut='Ctrl+M', triggered=self.showMmfPanel)
@@ -124,6 +127,12 @@ class Desktop(QtGui.QMainWindow):
         import tradepanel
         mmf = tradepanel.MmfPanel(self.books)
         if mmf.exec_():
+            pass
+
+    def showHolidayPanel(self):
+        import tradepanel
+        hol = tradepanel.HolidayPanel()
+        if hol.exec_():
             pass
 
     def refresh(self):
