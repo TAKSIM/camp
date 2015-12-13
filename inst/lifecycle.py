@@ -32,6 +32,22 @@ class Book:
         self.name_cn_short = name_cn_short
         self.startDate = startDate
 
+class Deposit:
+    def __init__(self, tradeDate, bookID, amount, yld, matDate, dcc, comment = ''):
+        self.tradeDate = tradeDate
+        self.bookID = bookID
+        self.amount = amount
+        self.yld = yld
+        self.matDate = matDate
+        self.dcc = dcc
+        self.comment = comment
+        m = hashlib.sha1(str(datetime.datetime.now())+'deposit')
+        self.dealID = m.hexdigest()
+
+
+    def bookToDB(self):
+        pass
+
 class Event:
     def __init__(self, dealID, instID, timestamp=None, signedBy=None, signedAt=None, cancel=False, comment='', refDate=None, refAmt=None, refPrice=None, refYield=None):
         self.dealID = dealID

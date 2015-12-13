@@ -62,7 +62,11 @@ class Desktop(QtGui.QMainWindow):
             raise Exception(u'无法连接数据库')
 
     def initFromDB(self):
-        # load books
+        self.loadBooks()
+        self.loadDeals()
+        self.loadHolidays()
+
+    def loadBooks(self):
         self.books = []
         q = QtSql.QSqlQuery()
         q.exec_('SELECT * FROM BOOKS')
@@ -73,13 +77,25 @@ class Desktop(QtGui.QMainWindow):
                                    q.value(3).toString(),
                                    q.value(4).toDate()))
 
-        # load deals
+    def loadDeals(self):
+        q = QtSql.QSqlQuery()
         self.deals = []
         q.exec_('SELECT * FROM DEALS')
         while q.next():
             d = str(q.value(0).toString())
             b = q.value(1).toInt()[0]
             self.deals.append(Deal(d, b))
+
+    def loadHolidays(self):
+        q = QtSql.QSqlQuery()
+        self.hols = []
+        q.exec_(u"'SELECT HOLDATE FROM HOLIDAYS WHERE HOLSTATUS<>'工作'")
+        while q.next():
+            self.hols.append(q.value(0).toDate().toPyDate())
+        self.workdays=[]
+        q.exec_(u"'SELECT HOLDATE FROM HOLIDAYS WHERE HOLSTATUS='工作'")
+        while q.next():
+            self.workdays.append(q.value(0).toDate().toPyDate())
 
     def createMenu(self):
         self.mb = self.menuBar()
@@ -113,7 +129,7 @@ class Desktop(QtGui.QMainWindow):
 
     def showDepoPanel(self):
         import tradepanel
-        depo = tradepanel.DepoPanel(self.books)
+        depo = tradepanel.DepoPanel(self.user, self.books)
         if depo.exec_():
             pass
 
@@ -248,7 +264,13 @@ class Desktop(QtGui.QMainWindow):
         self.eventModel = QtSql.QSqlQueryModel()
         self.eventModel.setQuery('SELECT INST_ID, EVENT_TYPE, REF_AMOUNT, REF_YIELD, COMMENT, SIGNER, TIME_STAMP FROM EVENTS')
         self.actView.setModel(self.eventModel)
-
+        self.eventModel.setHeaderData(0, QtCore.Qt.Horizontal, u'代码')
+        self.eventModel.setHeaderData(1, QtCore.Qt.Horizontal, u'类型')
+        self.eventModel.setHeaderData(2, QtCore.Qt.Horizontal, u'金额')
+        self.eventModel.setHeaderData(3, QtCore.Qt.Horizontal, u'收益率')
+        self.eventModel.setHeaderData(4, QtCore.Qt.Horizontal, u'备注')
+        self.eventModel.setHeaderData(5, QtCore.Qt.Horizontal, u'用户')
+        self.eventModel.setHeaderData(6, QtCore.Qt.Horizontal, u'时间')
         self.actView.resizeColumnsToContents()
         self.actView.resizeRowsToContents()
         self.actView.verticalHeader().hide()

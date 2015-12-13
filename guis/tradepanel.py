@@ -2,13 +2,15 @@
 from WindPy import *
 from PyQt4 import QtGui, QtSql, QtCore
 import datetime
+from inst.lifecycle import Deal
 
 class DepoPanel(QtGui.QDialog):
-    def __init__(self, books, parent = None):
+    def __init__(self, user, books, parent = None):
         QtGui.QDialog.__init__(self, parent)
         self.setWindowTitle(u'同业存款')
         self.setWindowIcon(QtGui.QIcon('icons/tent.png'))
         self.setFixedSize(200,250)
+        self.user = user
 
         layout = QtGui.QGridLayout()
         layout.addWidget(QtGui.QLabel(u'交易日'), 0,0,1,1)
@@ -16,9 +18,9 @@ class DepoPanel(QtGui.QDialog):
         self.tradeDate.setCalendarPopup(True)
         layout.addWidget(self.tradeDate, 0, 1, 1, 2)
         layout.addWidget(QtGui.QLabel(u'账簿'), 1, 0, 1, 1)
-        dbBooks = QtGui.QComboBox()
-        dbBooks.addItems([b.name_cn_short for b in books])
-        layout.addWidget(dbBooks, 1, 1, 1, 2)
+        self.books = QtGui.QComboBox()
+        self.books.addItems([b.name_cn_short for b in books])
+        layout.addWidget(self.books, 1, 1, 1, 2)
         layout.addWidget(QtGui.QLabel(u'规模（万元）'), 2, 0, 1, 1)
         self.amount = QtGui.QLineEdit()
         layout.addWidget(self.amount, 2, 1, 1, 2)
@@ -52,14 +54,12 @@ class DepoPanel(QtGui.QDialog):
         if self.matDate <= self.tradeDate:
             QtGui.QMessageBox.about(self, u"错误", u"到期日需要晚于交易日")
         else:
-            q = QtSql.QSqlQuery()
-            try:
-                q.exec_('')
-                QtSql.QSqlDatabase().commit()
-                self.accept()
-            except Exception, e:
-                print e.message
-                QtSql.QSqlDatabase().rollback()
+            pass
+            today = self.tradeDate.date().toPyDate()
+                # amount = float(self.amount.text()) * 10000.
+                # comment = self.comment.text()
+                # d = Deal(self.user, self.books.currentIndex(), u'同业存款', today, today, amount)
+
 
 class MmfPanel(QtGui.QDialog):
     def __init__(self, books, parent=None):
@@ -112,7 +112,7 @@ class BondPanel(QtGui.QDialog):
         QtGui.QDialog.__init__(self, parent)
         self.setWindowTitle(u'债券现券')
         self.setWindowIcon(QtGui.QIcon('icons/tent.png'))
-        self.setFixedSize(200,300)
+        self.setFixedSize(800,300)
 
         layout = QtGui.QHBoxLayout()
 
