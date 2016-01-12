@@ -104,7 +104,7 @@ class MmfPanel(QtGui.QDialog):
 
     def updateName(self):
         code = str(self.code.text())
-        name = w.wss(code, 'Name', 'rptDate={0}'.format(datetime.datetime.today(), '%Y%m%d'))
+        name = w.wss(code, 'Name', 'tradeDate={0}'.format(datetime.datetime.today(), '%Y%m%d'), 'credibility=1')
 
 
 class BondPanel(QtGui.QDialog):
@@ -245,7 +245,7 @@ class BondPanel(QtGui.QDialog):
                     'amount', # 债项评级
                     'lastdate_cnbd' # 最新估值日
                     ]
-        data = w.wss(str(self.code.text()), ','.join(infolist), 'rptDate={0}'.format(format(datetime.datetime.today(), '%Y%m%d')))
+        data = w.wss(str(self.code.text()), infolist, 'tradeDate={0}'.format(format(datetime.datetime.today(), '%Y%m%d')), 'credibility=1')
         if data.ErrorCode == 0:
             self.name.setText(data.Data[0][0])
             self.issuer.setText(data.Data[1][0])
@@ -255,14 +255,14 @@ class BondPanel(QtGui.QDialog):
             self.coupon.setText(format(data.Data[5][0], '.3f'))
             self.couponType.setText(data.Data[6][0])
             self.mkt.setText(data.Data[7][0])
-            self.ratingIssuer.setText(data.Data[8][0])
-            self.ratingBond.setText(data.Data[9][0])
+            self.ratingIssuer.setText(str(data.Data[8][0]))
+            self.ratingBond.setText(str(data.Data[9][0]))
             self.ttm.setText(format((data.Data[3][0]-datetime.datetime.today()).days/365.0, '.2f'))
             lastVDate = data.Data[10][0]
             self.vdate.setDate(lastVDate)
         else:
             QtGui.QMessageBox.information(self, u'万得数据错误', str(data.ErrorCode))
-        v = w.wss(str(self.code.text()),','.join(['yield_cnbd','duration']),'rptDate={0}'.format(format(lastVDate,'%Y%m%d')))
+        v = w.wss(str(self.code.text()), ['yield_cnbd','modidura_cnbd'],'tradeDate={0}'.format(format(lastVDate,'%Y%m%d')), 'credibility=1')
         if v.ErrorCode == 0:
             self.value.setText(format(v.Data[0][0], '.3f'))
             self.moddur.setText(format(v.Data[1][0], '.3f'))
@@ -271,7 +271,7 @@ class BondPanel(QtGui.QDialog):
 
     def updateValue(self):
         newDate = self.vdate.date()
-        data = w.wss(str(self.code.text()),['yield_cnbd'],'rtpDate={0}'.format(newDate.toString('yyyyMMdd')))
+        data = w.wss(str(self.code.text()),['yield_cnbd'],'tradeDate={0}'.format(newDate.toString('yyyyMMdd')), 'credibility=1')
         if data.ErrorCode == 0 and data.Data[0][0]:
             self.value.setText(format(data.Data[0][0],'.2f'))
 
