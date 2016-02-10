@@ -3,6 +3,7 @@ from login import LoginPage
 import env
 from inst.lifecycle import Book, Deal
 from PyQt4 import Qt, QtGui, QtCore, QtSql
+from dataview.view_subdetails import LiabilityView
 from WindPy import *
 import ctypes
 ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID('myappid')
@@ -65,6 +66,8 @@ class Desktop(QtGui.QMainWindow):
         self.newsub = QtGui.QPushButton(u'添加认购信息')
         self.newsub.clicked.connect(self.showNewSub)
         layout_subdetails.addWidget(self.newsub,0,0,1,1)
+        self.lv = LiabilityView()
+        layout_subdetails.addWidget(self.lv, 1,0,1,1)
         self.subdetails.setLayout(layout_subdetails)
         self.stackedLayout.addWidget(self.subdetails)
 
@@ -244,97 +247,6 @@ class Desktop(QtGui.QMainWindow):
 
     def about(self):
          QtGui.QMessageBox.about(self, u"关于CAMP", u"长安信托固定收益部交易管理平台")
-
-    def createLiabilityButtons(self):
-        layout = QtGui.QGridLayout()
-        self.btLiability = QtGui.QToolButton()
-        self.btLiability.setToolButtonStyle(3)
-        self.btLiability.setText(u'申购明细')
-        self.btLiability.setIcon(QtGui.QIcon('icons/note.png'))
-        self.btLiability.setIconSize(Qt.QSize(32,28))
-        layout.addWidget(self.btLiability,0,0,1,1)
-        return layout
-
-    def createAssetButtons(self):
-        layout = QtGui.QGridLayout()
-        self.btOverview = QtGui.QToolButton()
-        self.btOverview.setToolButtonStyle(3)
-        self.btOverview.setIcon(QtGui.QIcon('icons/global'))
-        self.btOverview.setText(u'账户总览')
-        self.btOverview.setIconSize(Qt.QSize(32,28))
-        layout.addWidget(self.btOverview,0,0,1,1)
-
-        self.btTrades = QtGui.QToolButton()
-        self.btTrades.setToolButtonStyle(3)
-        self.btTrades.setIcon(QtGui.QIcon('icons/items'))
-        self.btTrades.setText(u'交易明细')
-        self.btTrades.setIconSize(Qt.QSize(32,28))
-        layout.addWidget(self.btTrades,1,0,1,1)
-        return layout
-
-    def createOverviewLayout(self):
-        layout = QtGui.QVBoxLayout()
-
-        self.gbFilter = QtGui.QGroupBox(u'筛选条件')
-        layoutFilter = QtGui.QHBoxLayout()
-        layoutFilter.setAlignment(QtCore.Qt.AlignLeft)
-        # book filter
-        layoutBooks = QtGui.QHBoxLayout()
-        layoutBooks.addWidget(QtGui.QLabel(u'账簿'))
-        dbBooks = QtGui.QComboBox()
-        dbBooks.addItems([b.name_cn_short for b in self.books])
-        layoutBooks.addWidget(dbBooks)
-        layoutFilter.addLayout(layoutBooks)
-        # show expired trades
-        showExpTrds = QtGui.QCheckBox(u'显示已平仓的交易')
-        showExpTrds.setChecked(False)
-        layoutFilter.addWidget(showExpTrds)
-
-        self.gbFilter.setLayout(layoutFilter)
-        layout.addWidget(self.gbFilter)
-
-        self.actView = QtGui.QTableView()
-        self.eventModel = QtSql.QSqlQueryModel()
-        self.eventModel.setQuery('SELECT INST_ID, EVENT_TYPE, REF_AMOUNT, REF_YIELD, COMMENT, SIGNER, TIME_STAMP FROM EVENTS')
-        self.actView.setModel(self.eventModel)
-        self.eventModel.setHeaderData(0, QtCore.Qt.Horizontal, u'代码')
-        self.eventModel.setHeaderData(1, QtCore.Qt.Horizontal, u'类型')
-        self.eventModel.setHeaderData(2, QtCore.Qt.Horizontal, u'金额')
-        self.eventModel.setHeaderData(3, QtCore.Qt.Horizontal, u'收益率')
-        self.eventModel.setHeaderData(4, QtCore.Qt.Horizontal, u'备注')
-        self.eventModel.setHeaderData(5, QtCore.Qt.Horizontal, u'用户')
-        self.eventModel.setHeaderData(6, QtCore.Qt.Horizontal, u'时间')
-        self.actView.resizeColumnsToContents()
-        self.actView.resizeRowsToContents()
-        self.actView.verticalHeader().hide()
-        # self.actView.setColumnCount(5)
-        # self.actView.setHorizontalHeaderLabels([u'仓位',u'数量',u'买/卖',u'开仓价格',u'到期收益率'])
-        # self.actView.resizeColumnsToContents()
-        # self.actView.resizeRowsToContents()
-
-        layout.addWidget(self.actView)
-        return layout
-
-class AssetOverviewPage(QtGui.QWidget):
-    def __init__(self):
-        QtGui.QWidget.__init__(self)
-        layout = QtGui.QHBoxLayout()
-        layout.addWidget(QtGui.QLabel(u'资产概览'))
-        self.setLayout(layout)
-
-class TradeDetailsPage(QtGui.QWidget):
-    def __init__(self):
-        QtGui.QWidget.__init__(self)
-        layout = QtGui.QHBoxLayout()
-        layout.addWidget(QtGui.QLabel(u'交易明细'))
-        self.setLayout(layout)
-
-class LiabilityOverviewPage(QtGui.QWidget):
-    def __init__(self):
-        QtGui.QWidget.__init__(self)
-        layout = QtGui.QHBoxLayout()
-        layout.addWidget(QtGui.QLabel(u'申购记录'))
-        self.setLayout(layout)
 
 
 class TreeControl(QtGui.QTreeWidget):

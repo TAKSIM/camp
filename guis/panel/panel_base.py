@@ -3,12 +3,14 @@ from PyQt4 import QtGui
 from guis.settings import ColorWhite, ColorRed
 
 class PanelBase(QtGui.QDialog):
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, viewOnly=False, **kwargs):
         QtGui.QDialog.__init__(self, parent)
-        self.ok = QtGui.QPushButton(u'确定')
-        self.ok.clicked.connect(self.commit)
-        self.cancel = QtGui.QPushButton(u'取消')
-        self.cancel.clicked.connect(self.close)
+        self.viewOnly = viewOnly
+        if not self.viewOnly:
+            self.ok = QtGui.QPushButton(u'确定')
+            self.ok.clicked.connect(self.commit)
+            self.cancel = QtGui.QPushButton(u'取消')
+            self.cancel.clicked.connect(self.close)
 
     def check_validity(self, raiseWarning=False):
         return True

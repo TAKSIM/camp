@@ -3,9 +3,10 @@ from PyQt4 import QtGui, QtSql
 import datetime
 from panel_base import PanelBase
 
+
 class NewSubscription(PanelBase):
-    def __init__(self, parent=None):
-        PanelBase.__init__(self, parent)
+    def __init__(self, parent=None, viewOnly=False, **kwargs):
+        PanelBase.__init__(self, parent, viewOnly, **kwargs)
         self.standardtenors = ['14', '30', '60', '90', '120', '150', '180', '210', '240', '270', '300', '330', '360', '720']
         self.setWindowTitle(u'添加认购信息')
         self.setWindowIcon(QtGui.QIcon('icons/tent.png'))
@@ -215,3 +216,4 @@ class NewSubscription(PanelBase):
         except Exception, e:
             print e.message
             QtSql.QSqlDatabase().rollback()
+

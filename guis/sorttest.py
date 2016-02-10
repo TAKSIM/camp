@@ -13,8 +13,9 @@ class SortFilterProxyModel(QtGui.QSortFilterProxyModel):
             index = self.sourceModel().index(sourceRow, TIME, sourceParent)
             data = self.sourceModel().data(index)
 
-            # Return, if regExp match in displayed format.
-            return (self.filterRegExp().indexIn(data.toString(QtCore.Qt.DefaultLocaleShortDate)) >= 0)
+            # Return, if regExp match in displayed format.QtCore.Qt.DefaultLocaleShortDate
+            return (self.filterRegExp().indexIn(data.toString()) >= 0)
+
 
         # Not our business.
         return super(SortFilterProxyModel, self).filterAcceptsRow(sourceRow, sourceParent)
