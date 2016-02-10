@@ -3,7 +3,6 @@ from login import LoginPage
 import env
 from inst.lifecycle import Book, Deal
 from PyQt4 import Qt, QtGui, QtCore, QtSql
-import sorttest
 from WindPy import *
 import ctypes
 ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID('myappid')
@@ -78,29 +77,10 @@ class Desktop(QtGui.QMainWindow):
         self.stackedLayout.addWidget(self.risk)
 
     def showNewSub(self):
-        from panel_newsub import NewSubscription
+        from guis.panel.panel_newsub import NewSubscription
         ns = NewSubscription()
         if ns.exec_():
-            code = ns.subcode.text()
-            client_type = ns.clientType.currentIndex()
-            client_name = ns.clientname.currentText()
-            sale_type = ns.rbDirect.isChecked() and 'A' or 'B'
-            amount = ns.amount.text().toDouble()[0]
-            rtn = ns.rtn.text().toDouble()[0]
-            subdate = ns.subdate.date().toPyDate()
-            settledate = ns.settledate.date().toPyDate()
-            expdate = ns.expdate.date().toPyDate()
-            expops = ns.expops.currentIndex() + 1
-            comment = ns.comment.text()
-            q = QtSql.QSqlQuery()
-            try:
-                q.exec_("""INSERT INTO LIABILITY VALUES ('%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s')""" % (
-                    code, client_type, client_name, sale_type, amount, rtn, subdate, settledate, expdate, expops, comment))
-                QtSql.QSqlDatabase().commit()
-            except Exception, e:
-                print e.message
-                QtSql.QSqlDatabase().rollback()
-
+            pass
 
     def switchLayout(self, itemName):
         if itemName == Qt.QString(u'账户总览'):
