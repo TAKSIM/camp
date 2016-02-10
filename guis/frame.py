@@ -137,7 +137,17 @@ class Desktop(QtGui.QMainWindow):
         import tradepanel
         bond = tradepanel.BondPanel(self.books)
         if bond.exec_():
-            pass
+            bookID = bond.books.currentIndex()
+            instID = str(bond.code.text())
+            bookDate = bond.tradeDate.date()
+            daysToSettle = int(bond.settle.text())
+            if daysToSettle == 0:
+                settleDate = bookDate
+            else:
+                settleDate = w.tdaysoffset(daysToSettle, bookDate).Data[0][0].date()
+            amount = float(bond.amount.text())*10000.
+
+            #user, bookID, instID, bookDate, settleDate, amount, tradePrice
 
     def showMmfPanel(self):
         import tradepanel

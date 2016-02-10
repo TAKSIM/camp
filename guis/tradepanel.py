@@ -192,6 +192,7 @@ class BondPanel(QtGui.QDialog):
         tradeLayout.addWidget(self.amount,2,1,1,1)
         tradeLayout.addWidget(QtGui.QLabel(u'成交T+'),2,2,1,1)
         self.settle = QtGui.QLineEdit('0')
+        self.settle.setValidator(QtGui.QIntValidator())
         tradeLayout.addWidget(self.settle,2,3,1,1)
         tradeLayout.addWidget(QtGui.QLabel(u'估值'),3,0,1,1)
         self.value = QtGui.QLineEdit()
@@ -273,7 +274,7 @@ class BondPanel(QtGui.QDialog):
         newDate = self.vdate.date()
         data = w.wss(str(self.code.text()),['yield_cnbd'],'tradeDate={0}'.format(newDate.toString('yyyyMMdd')), 'credibility=1')
         if data.ErrorCode == 0 and data.Data[0][0]:
-            self.value.setText(format(data.Data[0][0],'.2f'))
+            self.value.setText(format(data.Data[0][0],'.4f'))
 
 class HolidayPanel(QtGui.QDialog):
     def __init__(self, parent=None):
