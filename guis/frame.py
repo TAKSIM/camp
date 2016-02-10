@@ -5,11 +5,9 @@ from inst.lifecycle import Book, Deal
 from PyQt4 import Qt, QtGui, QtCore, QtSql
 import sorttest
 from WindPy import *
+import ctypes
+ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID('myappid')
 
-def createLabel(text):
-    label = QtGui.QLabel(text)
-    label.setFrameStyle(QtGui.QFrame.Box | QtGui.QFrame.Raised)
-    return label
 
 class Desktop(QtGui.QMainWindow):
     def __init__(self):
@@ -20,22 +18,19 @@ class Desktop(QtGui.QMainWindow):
             self.user = env.User(str(login.username.text()))
             self.initFromDB()
 
-            self.createToolBox()
             self.createAction()
             self.createMenu()
             self.createSystemTray()
+            self.createPages()
 
-            self.msgPanel = sorttest.Window()
-            layout = QtGui.QVBoxLayout()
-            mainLayout = QtGui.QHBoxLayout()
-            mainLayout.addWidget(self.toolBox)
-            self.panel = QtGui.QWidget()
-            self.layoutOverview = self.createOverviewLayout()
-            self.panel.setLayout(self.layoutOverview)
-
-            mainLayout.addWidget(self.panel)
-            layout.addLayout(mainLayout)
-            layout.addWidget(self.msgPanel)
+            layout = QtGui.QHBoxLayout()
+            self.centralWidget = QtGui.QWidget()
+            self.centralWidget.setLayout(layout)
+            self.setCentralWidget(self.centralWidget)
+            self.treecontrol = TreeControl()
+            self.treecontrol.clickSignal.connect(self.switchLayout)
+            layout.addWidget(self.treecontrol)
+            layout.addLayout(self.stackedLayout)
 
             self.centralWidget = QtGui.QWidget()
             self.centralWidget.setLayout(layout)
@@ -46,10 +41,78 @@ class Desktop(QtGui.QMainWindow):
 
             self.show()
             self.statusBar().showMessage(u'启动万得链接')
-            w.start()
+            #w.start()
             self.statusBar().showMessage(u'准备就绪')
         else:
             QtGui.qApp.quit()
+
+    def createPages(self):
+        self.stackedLayout = QtGui.QStackedLayout()
+        # acct overview
+        self.acctview = QtGui.QLabel(u'账户总览')
+        self.stackedLayout.addWidget(self.acctview)
+
+        # trade details
+        self.tradedetails = QtGui.QLabel(u'交易明细')
+        self.stackedLayout.addWidget(self.tradedetails)
+
+        # book details
+        self.bookdetails = QtGui.QLabel(u'账簿信息')
+        self.stackedLayout.addWidget(self.bookdetails)
+
+        # subscription details
+        self.subdetails = QtGui.QWidget()
+        layout_subdetails = QtGui.QGridLayout()
+        self.newsub = QtGui.QPushButton(u'添加认购信息')
+        self.newsub.clicked.connect(self.showNewSub)
+        layout_subdetails.addWidget(self.newsub,0,0,1,1)
+        self.subdetails.setLayout(layout_subdetails)
+        self.stackedLayout.addWidget(self.subdetails)
+
+        # credit research
+        self.bondpool = QtGui.QLabel(u'债券池')
+        self.stackedLayout.addWidget(self.bondpool)
+
+        # risk control
+        self.risk = QtGui.QLabel(u'待开发')
+        self.stackedLayout.addWidget(self.risk)
+
+    def showNewSub(self):
+        from panel_newsub import NewSubscription
+        ns = NewSubscription()
+        if ns.exec_():
+            code = ns.subcode.text()
+            client_type = ns.clientType.currentIndex()
+            client_name = ns.clientname.currentText()
+            sale_type = ns.rbDirect.isChecked() and 'A' or 'B'
+            amount = ns.amount.text().toDouble()[0]
+            rtn = ns.rtn.text().toDouble()[0]
+            subdate = ns.subdate.date().toPyDate()
+            settledate = ns.settledate.date().toPyDate()
+            expdate = ns.expdate.date().toPyDate()
+            expops = ns.expops.currentIndex() + 1
+            comment = ns.comment.text()
+            q = QtSql.QSqlQuery()
+            try:
+                q.exec_("""INSERT INTO LIABILITY VALUES ('%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s')""" % (
+                    code, client_type, client_name, sale_type, amount, rtn, subdate, settledate, expdate, expops, comment))
+                QtSql.QSqlDatabase().commit()
+            except Exception, e:
+                print e.message
+                QtSql.QSqlDatabase().rollback()
+
+
+    def switchLayout(self, itemName):
+        if itemName == Qt.QString(u'账户总览'):
+            self.stackedLayout.setCurrentWidget(self.acctview)
+        elif itemName == Qt.QString(u'交易明细'):
+            self.stackedLayout.setCurrentWidget(self.tradedetails)
+        elif itemName == Qt.QString(u'账簿信息'):
+            self.stackedLayout.setCurrentWidget(self.bookdetails)
+        elif itemName == Qt.QString(u'申购明细'):
+            self.stackedLayout.setCurrentWidget(self.subdetails)
+        elif itemName == Qt.QString(u'债券池'):
+            self.stackedLayout.setCurrentWidget(self.bondpool)
 
     def initDB(self, host='caitcfid.mysql.rds.aliyuncs.com', port=3306, dbname='secs'):
         self.db = QtSql.QSqlDatabase.addDatabase('QMYSQL')
@@ -202,26 +265,6 @@ class Desktop(QtGui.QMainWindow):
     def about(self):
          QtGui.QMessageBox.about(self, u"关于CAMP", u"长安信托固定收益部交易管理平台")
 
-    def createToolBox(self):
-        assetWidget = QtGui.QWidget()
-        assetLayout = self.createAssetButtons()
-        assetWidget.setLayout(assetLayout)
-
-        liabilityWidget = QtGui.QWidget()
-        liabilityLayout = self.createLiabilityButtons()
-        liabilityWidget.setLayout(liabilityLayout)
-
-        creditWidget = QtGui.QWidget()
-        riskWidget = QtGui.QWidget()
-        self.toolBox = QtGui.QToolBox()
-        #self.toolBox.setFixedWidth(120)
-        self.toolBox.setSizePolicy(QtGui.QSizePolicy(QtGui.QSizePolicy.Maximum, QtGui.QSizePolicy.Ignored))
-        self.toolBox.setMinimumWidth(assetWidget.sizeHint().width())
-        self.toolBox.addItem(assetWidget, u'  资    产')
-        self.toolBox.addItem(liabilityWidget, u"  负    债")
-        self.toolBox.addItem(creditWidget, u'  信用研究')
-        self.toolBox.addItem(riskWidget, u'  风险控制')
-
     def createLiabilityButtons(self):
         layout = QtGui.QGridLayout()
         self.btLiability = QtGui.QToolButton()
@@ -292,17 +335,6 @@ class Desktop(QtGui.QMainWindow):
         layout.addWidget(self.actView)
         return layout
 
-    def changeAssetPage(self, current, previous):
-        if not current:
-            current = previous
-        if self.toolBox.currentIndex()==0:
-            self.assetWidgets.setCurrentIndex(self.assetBtns.row(current))
-
-    def changeLiabilityPage(self, current, previous):
-        if not current:
-            current = previous
-        self.lbWidgets.setCurrentIndex(self.lbBtns.row(current))
-
 class AssetOverviewPage(QtGui.QWidget):
     def __init__(self):
         QtGui.QWidget.__init__(self)
@@ -323,3 +355,47 @@ class LiabilityOverviewPage(QtGui.QWidget):
         layout = QtGui.QHBoxLayout()
         layout.addWidget(QtGui.QLabel(u'申购记录'))
         self.setLayout(layout)
+
+
+class TreeControl(QtGui.QTreeWidget):
+    clickSignal = QtCore.pyqtSignal(str)
+    def __init__(self, parent=None):
+        QtGui.QTreeWidget.__init__(self, parent)
+        self.setHeaderHidden(True)
+        self.addItems(self.invisibleRootItem())
+        self.itemClicked.connect(self.handleClicked)
+        self.setMaximumWidth(120)
+
+    def addItems(self, parent):
+        assets_item = self.addParent(parent, u'资产' )
+        self.addChild(assets_item, u'账户总览')
+        self.addChild(assets_item, u'交易明细')
+
+        liability_item = self.addParent(parent, u'负债')
+        self.addChild(liability_item, u'申购明细')
+
+        credit_item = self.addParent(parent, u'信用研究')
+        self.addChild(credit_item, u'债券池')
+
+        risk_item = self.addParent(parent, u'风险控制')
+
+
+    def addParent(self, parent, title):
+        item = QtGui.QTreeWidgetItem(parent, [title])
+        item.setChildIndicatorPolicy(QtGui.QTreeWidgetItem.ShowIndicator)
+        item.setExpanded(True)
+        return item
+
+    def addChild(self, parent, title):
+        item = QtGui.QTreeWidgetItem(parent, [title])
+        return item
+
+    def handleClicked(self, item):
+        si = self.selectedItems()[0].text(0)
+        self.clickSignal.emit(si)
+
+if __name__ == '__main__':
+    import sys
+    app = QtGui.QApplication(sys.argv)
+    f = Desktop()
+    sys.exit(app.exec_())

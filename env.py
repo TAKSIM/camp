@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import hashlib
-import MySQLdb
 from PyQt4 import QtSql
 
 sysIcon = r'icons\tent.png'
