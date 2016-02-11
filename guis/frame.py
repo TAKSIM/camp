@@ -3,7 +3,7 @@ from login import LoginPage
 import env
 from inst.lifecycle import Book, Deal
 from PyQt4 import Qt, QtGui, QtCore, QtSql
-from dataview.view_subdetails import LiabilityViewWithFilter
+from dataview.view_subdetails import LiabilityViewSet
 from WindPy import *
 import ctypes
 ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID('myappid')
@@ -66,8 +66,12 @@ class Desktop(QtGui.QMainWindow):
         self.newsub = QtGui.QPushButton(u'添加认购信息')
         self.newsub.clicked.connect(self.showNewSub)
         layout_subdetails.addWidget(self.newsub,0,0,1,1)
-        self.lv = LiabilityViewWithFilter()
-        layout_subdetails.addWidget(self.lv, 1,0,1,1)
+        self.lvs = LiabilityViewSet()
+        layout_subdetails.addWidget(QtGui.QLabel(u'筛选列'),0,1,1,1)
+        layout_subdetails.addWidget(self.lvs.sortCol,0,2,1,1)
+        layout_subdetails.addWidget(QtGui.QLabel(u'列包含'),0,3,1,1)
+        layout_subdetails.addWidget(self.lvs.sortContent,0,4,1,1)
+        layout_subdetails.addWidget(self.lvs.vb, 1,0,1,5)
         self.subdetails.setLayout(layout_subdetails)
         self.stackedLayout.addWidget(self.subdetails)
 
