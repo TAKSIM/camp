@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from PyQt4 import QtGui, QtSql, QtCore
 from view_base import ViewBase, ViewBaseSet, NumberDelegate, DateDelegate
-
+import datetime
 
 class LiabilityView(ViewBase):
     def __init__(self, parent=None):
@@ -77,4 +77,15 @@ class LiabilityViewSet(ViewBaseSet):
     def __init__(self, parent=None):
         ViewBaseSet.__init__(self, LiabilityView(), parent)
         self.cbShowLiveOnly = QtGui.QCheckBox(u'只显示未到期')
-        self.cbShowLiveOnly.setChecked(True)
+        self.cbShowLiveOnly.setChecked(False)
+        self.cbShowLiveOnly.stateChanged.connect(self.showlive_switch)
+
+    def showlive_switch(self):
+        td = datetime.date.today()
+        constraint = """ WHERE EXP_DATE>='%s'""" % td
+        if self.cbShowLiveOnly.isChecked():
+            self.vb.query = self.vb.query + constraint
+        else:
+            self.vb.query = self.vb.query[:len(self.vb.query)-len(constraint)]
+        self.vb.dataModel.setQuery(self.vb.query)
+
