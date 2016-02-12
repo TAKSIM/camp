@@ -60,6 +60,10 @@ class Desktop(QtGui.QMainWindow):
         self.bookdetails = QtGui.QLabel(u'账簿信息')
         self.stackedLayout.addWidget(self.bookdetails)
 
+        # subscription overview
+        self.suboverview = QtGui.QLabel(u'负债总览')
+        self.stackedLayout.addWidget(self.suboverview)
+
         # subscription details
         self.subdetails = QtGui.QWidget()
         layout_subdetails = QtGui.QGridLayout()
@@ -98,6 +102,8 @@ class Desktop(QtGui.QMainWindow):
             self.stackedLayout.setCurrentWidget(self.tradedetails)
         elif itemName == Qt.QString(u'账簿信息'):
             self.stackedLayout.setCurrentWidget(self.bookdetails)
+        elif itemName == Qt.QString(u'负债总览'):
+            self.stackedLayout.setCurrentWidget(self.suboverview)
         elif itemName == Qt.QString(u'申购明细'):
             self.stackedLayout.setCurrentWidget(self.subdetails)
         elif itemName == Qt.QString(u'债券池'):
@@ -268,8 +274,10 @@ class TreeControl(QtGui.QTreeWidget):
         assets_item = self.addParent(parent, u'资产' )
         self.addChild(assets_item, u'账户总览')
         self.addChild(assets_item, u'交易明细')
+        self.addChild(assets_item, u'账簿信息')
 
         liability_item = self.addParent(parent, u'负债')
+        self.addChild(liability_item, u'负债总览')
         self.addChild(liability_item, u'申购明细')
 
         credit_item = self.addParent(parent, u'信用研究')
