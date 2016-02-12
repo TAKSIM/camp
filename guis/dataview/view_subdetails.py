@@ -37,7 +37,7 @@ class LiabilityView(ViewBase):
             menu    = True,
             parent  = parent)
 
-        self.sortByColumn(0, QtCore.Qt.DescendingOrder)
+        self.sortByColumn(0, QtCore.Qt.AscendingOrder)
         nfAmt = NumberDelegate(parent=self, withComma=True, numDigits=0)
         nfPct = NumberDelegate(parent=self, withComma=False, numDigits=2)
         df = DateDelegate(parent=self)
@@ -76,3 +76,5 @@ class LiabilityView(ViewBase):
 class LiabilityViewSet(ViewBaseSet):
     def __init__(self, parent=None):
         ViewBaseSet.__init__(self, LiabilityView(), parent)
+        self.cbShowLiveOnly = QtGui.QCheckBox(u'只显示未到期')
+        self.cbShowLiveOnly.setChecked(True)
