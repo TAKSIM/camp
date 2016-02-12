@@ -47,10 +47,12 @@ class NewSubscription(PanelBase):
         layout.addWidget(QtGui.QLabel(u'认购金额(元)'),3,0,1,1)
         self.amount = QtGui.QLineEdit()
         self.amount.setValidator(QtGui.QDoubleValidator(0., 10000000000., 2))
+        self.amount.textChanged.connect(self.calc_totalrtn)
         layout.addWidget(self.amount, 3, 1, 1, 1)
         layout.addWidget(QtGui.QLabel(u'预期收益率(%)'), 4, 0, 1, 1)
         self.rtn = QtGui.QLineEdit()
         self.rtn.setValidator(QtGui.QDoubleValidator(0., 100., 2))
+        self.rtn.textChanged.connect(self.calc_totalrtn)
         layout.addWidget(self.rtn, 4, 1, 1, 1)
         layout.addWidget(QtGui.QLabel(u'认购日'), 5, 0, 1, 1)
         self.subdate = QtGui.QDateEdit(td)
@@ -123,6 +125,16 @@ class NewSubscription(PanelBase):
 
         self.setLayout(layout)
 
+    def calc_totalrtn(self):
+        amt, s = self.amount.text().toDouble()
+        if s:
+            rtn, s = self.rtn.text().toDouble()
+            if s:
+                t0 = self.settledate.date().toPyDate()
+                t1 = self.expdate.date().toPyDate()
+                ds = (t1-t0).days+1
+                self.totalrtn.setText('{:,.2f}'.format(amt*(1+rtn*ds/36500.)))
+
     def tenorbtn_clicked(self, *args, **kwargs):
         if self.rbX.isChecked():
             self.ytenors.setEnabled(False)
@@ -138,7 +150,10 @@ class NewSubscription(PanelBase):
         if self.rbX.isChecked():
             ds = self.xtenors.currentText().toInt()[0]
         elif self.rbY.isChecked():
-            ds = self.ytenors.text().toInt()[0]
+            dstr = self.ytenors.text()
+            if dstr.isEmpty():
+                return
+            ds = dstr.toInt()[0]
         else:
             ds = 1
         self.expdate.setDate(self.settledate.date().toPyDate()+datetime.timedelta(days=ds-1))
@@ -164,6 +179,7 @@ class NewSubscription(PanelBase):
             self.rbY.setChecked(True)
             self.tenorbtn_clicked()
             self.ytenors.setText(str(ds))
+        self.calc_totalrtn()
 
     def check_validity(self, raiseWarning=False):
         # logic check for all input that could not ensure validity by UI

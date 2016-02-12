@@ -79,6 +79,7 @@ class LiabilityViewSet(ViewBaseSet):
         self.cbShowLiveOnly = QtGui.QCheckBox(u'只显示未到期')
         self.cbShowLiveOnly.setChecked(False)
         self.cbShowLiveOnly.stateChanged.connect(self.showlive_switch)
+        self.sortCol.setCurrentIndex(3)
 
     def showlive_switch(self):
         td = datetime.date.today()
