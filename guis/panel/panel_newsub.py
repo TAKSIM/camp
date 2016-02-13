@@ -9,7 +9,6 @@ class NewSubscription(PanelBase):
         PanelBase.__init__(self, parent, viewOnly, **kwargs)
         self.standardtenors = ['14', '30', '60', '90', '120', '150', '180', '210', '240', '270', '300', '330', '360', '720']
         self.setWindowTitle(u'添加认购信息')
-        self.setWindowIcon(QtGui.QIcon('icons/tent.png'))
         td = datetime.date.today()
         layout = QtGui.QGridLayout()
         layout.addWidget(QtGui.QLabel(u'客户类型'), 0, 0, 1, 1)

@@ -1,125 +1,139 @@
-#-*- coding:utf8 -*-
+#!/usr/bin/env python
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
-import math
+# embedding_in_qt4.py --- Simple Qt4 application embedding matplotlib canvases
+#
+# Copyright (C) 2005 Florent Rougon
+#               2006 Darren Dale
+#
+# This file is an example program for matplotlib. It may be used and
+# modified with no restriction; raw copies as well as modified versions
+# may be distributed without limitation.
 
-QTextCodec.setCodecForTr(QTextCodec.codecForName("utf-8"))
+from __future__ import unicode_literals
+import sys
+import os
+import random
+from matplotlib.backends import qt_compat
+use_pyside = qt_compat.QT_API == qt_compat.QT_API_PYSIDE
+if use_pyside:
+    from PySide import QtGui, QtCore
+else:
+    from PyQt4 import QtGui, QtCore
 
-class DateDelegate(QItemDelegate):
-    def __init__(self):
-        super(DateDelegate,self).__init__()
+from numpy import arange, sin, pi
+from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.figure import Figure
+
+progname = os.path.basename(sys.argv[0])
+progversion = "0.1"
+
+
+class MyMplCanvas(FigureCanvas):
+    """Ultimately, this is a QWidget (as well as a FigureCanvasAgg, etc.)."""
+
+    def __init__(self, parent=None, width=5, height=4, dpi=100):
+        fig = Figure(figsize=(width, height), dpi=dpi)
+        self.axes = fig.add_subplot(111)
+        # We want the axes cleared every time plot() is called
+        self.axes.hold(False)
+
+        self.compute_initial_figure()
+
+        #
+        FigureCanvas.__init__(self, fig)
+        self.setParent(parent)
+
+        FigureCanvas.setSizePolicy(self,
+                                   QtGui.QSizePolicy.Expanding,
+                                   QtGui.QSizePolicy.Expanding)
+        FigureCanvas.updateGeometry(self)
+
+    def compute_initial_figure(self):
         pass
 
-    def createEditor(self,parent,option,index):
-        editor = QDateTimeEdit(parent)
-        editor.setDisplayFormat("yyyy-MM-dd")
-        editor.setCalendarPopup(True)
-        editor.installEventFilter(self)
-        return editor
 
-    def setEditorData(self,editor,index):
-        dateStr = index.model().data(index).toString()
-        date = QDate.fromString(dateStr,Qt.ISODate)
-        edit = editor
-        edit.setDate(date)
+class MyStaticMplCanvas(MyMplCanvas):
+    """Simple canvas with a sine plot."""
 
-    def setModelData(self,editor,model,index):
-        date = editor.date()
-        model.setData(index,QVariant(date.toString(Qt.ISODate)))
+    def compute_initial_figure(self):
+        t = arange(0.0, 3.0, 0.01)
+        s = sin(2*pi*t)
+        self.axes.plot(t, s)
 
-class ComboDelegate(QItemDelegate):
+
+class MyDynamicMplCanvas(MyMplCanvas):
+    """A canvas that updates itself every second with a new plot."""
+
+    def __init__(self, *args, **kwargs):
+        MyMplCanvas.__init__(self, *args, **kwargs)
+        timer = QtCore.QTimer(self)
+        timer.timeout.connect(self.update_figure)
+        timer.start(1000)
+
+    def compute_initial_figure(self):
+        self.axes.plot([0, 1, 2, 3], [1, 2, 0, 4], 'r')
+
+    def update_figure(self):
+        # Build a list of 4 random integers between 0 and 10 (both inclusive)
+        l = [random.randint(0, 10) for i in range(4)]
+
+        self.axes.plot([0, 1, 2, 3], l, 'r')
+        self.draw()
+
+
+class ApplicationWindow(QtGui.QMainWindow):
     def __init__(self):
-        super(ComboDelegate,self).__init__()
-        pass
+        QtGui.QMainWindow.__init__(self)
+        self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
+        self.setWindowTitle("application main window")
 
-    def createEditor(self,parent,QStyleOptionViewItem,QModelIndex):
-        editor = QComboBox(parent)
-        editor.addItem(self.tr("工人"))
-        editor.addItem(self.tr("农民"))
-        editor.installEventFilter(self)
-        return editor
+        self.file_menu = QtGui.QMenu('&File', self)
+        self.file_menu.addAction('&Quit', self.fileQuit,
+                                 QtCore.Qt.CTRL + QtCore.Qt.Key_Q)
+        self.menuBar().addMenu(self.file_menu)
 
-    def setEditorData(self,editor,index):
-        str = index.model().data(index).toString()
-        i = editor.findText(str)
-        editor.setCurrentIndex(i)
+        self.help_menu = QtGui.QMenu('&Help', self)
+        self.menuBar().addSeparator()
+        self.menuBar().addMenu(self.help_menu)
 
-    def setModelData(self,editor,model,index):
-        str = editor.currentText()
-        model.setData(index,str)
+        self.help_menu.addAction('&About', self.about)
 
-    def updateEditorGeometry(self,editor,option,index):
-        editor.setGeometry(option.rect)
+        self.main_widget = QtGui.QWidget(self)
 
-class SpinDelegate(QItemDelegate):
-    def __init__(self):
-        super(SpinDelegate,self).__init__()
-        pass
-    def createEditor(self,parent,QStyleOptionViewItem,QModelIndex):
-        editor = QSpinBox(parent)
-        editor.installEventFilter(self)
-        editor.setMinimum(0)
-        editor.setMaximum(10000)
-        return editor
+        l = QtGui.QVBoxLayout(self.main_widget)
+        sc = MyStaticMplCanvas(self.main_widget, width=5, height=4, dpi=100)
+        dc = MyDynamicMplCanvas(self.main_widget, width=5, height=4, dpi=100)
+        l.addWidget(sc)
+        l.addWidget(dc)
 
-    def setEditorData(self,editor,index):
-        value = index.model().data(index,Qt.EditRole).toInt()[0]
+        self.main_widget.setFocus()
+        self.setCentralWidget(self.main_widget)
 
-        editor.setValue(value)
+        self.statusBar().showMessage("All hail matplotlib!", 2000)
 
-    def setModelData(self,editor,model,index):
-        value = editor.value()
-        model.setData(index, value, Qt.EditRole)
+    def fileQuit(self):
+        self.close()
 
-    def updateEditorGeometry(self,editor,option,index):
-        editor.setGeometry(option.rect)
+    def closeEvent(self, ce):
+        self.fileQuit()
+
+    def about(self):
+        QtGui.QMessageBox.about(self, "About",
+                                """embedding_in_qt4.py example
+Copyright 2005 Florent Rougon, 2006 Darren Dale
+
+This program is a simple example of a Qt4 application embedding matplotlib
+canvases.
+
+It may be used and modified with no restriction; raw copies as well as
+modified versions may be distributed without limitation."""
+                                )
 
 
-if __name__ == '__main__':
-    import sys
-    app = QApplication(sys.argv)
-    model = QStandardItemModel(4,4)
-    tableview = QTableView()
-    tableview.setModel(model)
+qApp = QtGui.QApplication(sys.argv)
 
-    dateDelegate = DateDelegate()
-    comboDelegate = ComboDelegate()
-    spinDelegate = SpinDelegate()
-
-    tableview.setItemDelegateForColumn(1,dateDelegate)
-    tableview.setItemDelegateForColumn(2,comboDelegate)
-    tableview.setItemDelegateForColumn(3,spinDelegate)
-
-    model.setHeaderData(0,Qt.Horizontal,model.tr("Name"))
-    model.setHeaderData(1,Qt.Horizontal,model.tr("Birthday"))
-    model.setHeaderData(2,Qt.Horizontal,model.tr("Job"))
-    model.setHeaderData(3,Qt.Horizontal,model.tr("Income"))
-
-    file = QFile("./image/data.tab")
-    if file.open(QFile.ReadOnly|QFile.Text):
-        stream = QTextStream(file)
-        model.removeRows(0,model.rowCount(QModelIndex()),QModelIndex())
-        row = 0
-
-        while True:
-            line = stream.readLine()
-            if line.isEmpty() is False:
-                model.insertRows(row,1,QModelIndex())
-                pieces = line.split(",",QString.SkipEmptyParts)
-
-                model.setData(model.index(row,0,QModelIndex()),pieces.takeAt(0))
-                model.setData(model.index(row,1,QModelIndex()),pieces.takeAt(0))
-                model.setData(model.index(row,2,QModelIndex()),pieces.takeAt(0))
-                model.setData(model.index(row,3,QModelIndex()),pieces.takeAt(0))
-                row+=1
-
-            else:
-                break
-
-    file.close()
-
-    tableview.setWindowTitle(tableview.tr("Delegate"))
-    tableview.show()
-
-    sys.exit(app.exec_())
+aw = ApplicationWindow()
+aw.setWindowTitle("%s" % progname)
+aw.show()
+sys.exit(qApp.exec_())
+#qApp.exec_()

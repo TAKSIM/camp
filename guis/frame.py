@@ -4,7 +4,12 @@ import env
 from inst.lifecycle import Book, Deal
 from PyQt4 import Qt, QtGui, QtCore, QtSql
 from dataview.view_subdetails import LiabilityViewSet
+from dataview.view_books import BookViewSet
 from WindPy import *
+from settings import figFont
+from matplotlibwidget import MatplotlibWidget
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 import ctypes
 ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID('myappid')
 
@@ -12,6 +17,8 @@ ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID('myappid')
 class Desktop(QtGui.QMainWindow):
     def __init__(self):
         QtGui.QMainWindow.__init__(self)
+        self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
+        self.td = datetime.today()
         self.initDB()
         login = LoginPage()
         if login.exec_():
@@ -57,11 +64,21 @@ class Desktop(QtGui.QMainWindow):
         self.stackedLayout.addWidget(self.tradedetails)
 
         # book details
-        self.bookdetails = QtGui.QLabel(u'账簿信息')
+        self.bookdetails = QtGui.QWidget()
+        layout_bookdetails = QtGui.QGridLayout()
+        self.bvs = BookViewSet()
+        layout_bookdetails.addWidget(self.bvs.btnRefresh,0,0,1,1)
+        self.newbook = QtGui.QPushButton(u'添加账簿')
+        self.newbook.clicked.connect(self.showNewBook)
+        layout_bookdetails.addWidget(self.newbook,0,1,1,1)
+        layout_bookdetails.addWidget(self.bvs.vb,1,0,1,6)
+        self.bookdetails.setLayout(layout_bookdetails)
         self.stackedLayout.addWidget(self.bookdetails)
 
         # subscription overview
-        self.suboverview = QtGui.QLabel(u'负债总览')
+        self.suboverview = QtGui.QWidget()
+        layout_suboverview = self.createSubOverviewPage()
+        self.suboverview.setLayout(layout_suboverview)
         self.stackedLayout.addWidget(self.suboverview)
 
         # subscription details
@@ -89,10 +106,31 @@ class Desktop(QtGui.QMainWindow):
         self.risk = QtGui.QLabel(u'待开发')
         self.stackedLayout.addWidget(self.risk)
 
+    def createSubOverviewPage(self):
+        layout = QtGui.QGridLayout()
+        q = QtSql.QSqlQuery("""select client_type, sum(amount) from liability where exp_date>='%s' group by client_type"""%self.td)
+        byInstTypeLabels = []
+        byInstTypeValues = []
+        while q.next():
+            byInstTypeLabels.append(q.value(0).toString())
+            byInstTypeValues.append(q.value(1).toDouble()[0]/100000000.)
+        fw = MatplotlibWidget(parent=self, width=1, height=1, title='TEST ONLY')
+        subplot = fw.figure.add_subplot(111)
+        subplot.pie(byInstTypeValues, labels=byInstTypeLabels, autopct='%1.1f%%')
+        fw.draw()
+        layout.addWidget(fw,0,0,1,1)
+        return layout
+
     def showNewSub(self):
         from guis.panel.panel_newsub import NewSubscription
         ns = NewSubscription()
         if ns.exec_():
+            pass
+
+    def showNewBook(self):
+        from guis.panel.panel_newbook import NewBook
+        nb = NewBook()
+        if nb.exec_():
             pass
 
     def switchLayout(self, itemName):
@@ -129,11 +167,11 @@ class Desktop(QtGui.QMainWindow):
         q = QtSql.QSqlQuery()
         q.exec_('SELECT * FROM BOOKS')
         while q.next():
-            self.books.append(Book(q.value(0).toInt()[0],
+            self.books.append(Book(q.value(0).toString(),
                                    q.value(1).toString(),
-                                   q.value(2).toString(),
+                                   q.value(2).toDate().toPyDate(),
                                    q.value(3).toString(),
-                                   q.value(4).toDate()))
+                                   q.value(4).toString()))
 
     def loadDeals(self):
         q = QtSql.QSqlQuery()

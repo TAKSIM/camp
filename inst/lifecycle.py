@@ -25,12 +25,12 @@ import datetime
 EVENT_TYPE = enum(OPEN=0, OPEN_SETTLE=1, CLOSE=2, CLOSE_SETTLE=3, DEFAULT=4, CASH_FLOW=5, COUPON=6)
 
 class Book:
-    def __init__(self, id, name_en, name_cn_short, name_cn_full, startDate = None):
-        self.id = id
-        self.name_en = name_en
+    def __init__(self, name_cn_short, name_cn_full, startDate = None, trader='', windcode=''):
         self.name_cn_full = name_cn_full
         self.name_cn_short = name_cn_short
         self.startDate = startDate
+        self.trader = trader
+        self.windcode = windcode
 
 class Deposit:
     def __init__(self, tradeDate, bookID, amount, yld, matDate, dcc, comment = ''):
