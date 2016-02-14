@@ -5,12 +5,11 @@ from inst.lifecycle import Book, Deal
 from PyQt4 import Qt, QtGui, QtCore, QtSql
 from dataview.view_subdetails import LiabilityViewSet
 from dataview.view_books import BookViewSet
+from panel.panel_log import LogPanel, LogStream
 from WindPy import *
-from settings import figFont
 from matplotlibwidget import MatplotlibWidget
-from matplotlib.figure import Figure
-from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 import ctypes
+import sys
 ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID('myappid')
 
 
@@ -24,6 +23,10 @@ class Desktop(QtGui.QMainWindow):
         if login.exec_():
             self.user = env.User(str(login.username.text()))
             self.initFromDB()
+            self.log = LogPanel()
+            self.logstream = LogStream()
+            self.logstream.message.connect(self.log.on_stream_update)
+            sys.stdout = self.logstream
 
             self.createAction()
             self.createMenu()
@@ -196,6 +199,7 @@ class Desktop(QtGui.QMainWindow):
     def createMenu(self):
         self.mb = self.menuBar()
         m1 = self.mb.addMenu(u'&系统')
+        m1.addAction(self.showLogAction)
         m1.addAction(self.holAction)
         m1.addAction(self.refreshAction)
         m1.addAction(self.exitAction)
@@ -209,6 +213,7 @@ class Desktop(QtGui.QMainWindow):
         m3.addAction(self.aboutAction)
 
     def createAction(self):
+        self.showLogAction = QtGui.QAction(u'显示日志', self, triggered=self.log.show)
         self.exitAction = QtGui.QAction(QtGui.QIcon(r'icons\exit.png'), u'退出', self, triggered=QtGui.qApp.quit)
         self.refreshAction = QtGui.QAction(QtGui.QIcon(r'icons\refresh.png'), u'刷新', self, triggered=self.refresh, shortcut='F5')
         self.holAction = QtGui.QAction(QtGui.QIcon(r'icons\settings.png'), u'假期设置', self, shortcut='Ctrl+H', triggered=self.showHolidayPanel)
