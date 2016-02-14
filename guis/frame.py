@@ -213,7 +213,7 @@ class Desktop(QtGui.QMainWindow):
         m3.addAction(self.aboutAction)
 
     def createAction(self):
-        self.showLogAction = QtGui.QAction(u'显示日志', self, triggered=self.log.show)
+        self.showLogAction = QtGui.QAction(QtGui.QIcon('icons/info.png'), u'显示日志', self, triggered=self.log.show)
         self.exitAction = QtGui.QAction(QtGui.QIcon(r'icons\exit.png'), u'退出', self, triggered=QtGui.qApp.quit)
         self.refreshAction = QtGui.QAction(QtGui.QIcon(r'icons\refresh.png'), u'刷新', self, triggered=self.refresh, shortcut='F5')
         self.holAction = QtGui.QAction(QtGui.QIcon(r'icons\settings.png'), u'假期设置', self, shortcut='Ctrl+H', triggered=self.showHolidayPanel)
@@ -263,7 +263,7 @@ class Desktop(QtGui.QMainWindow):
             pass
 
     def refresh(self):
-        self.eventModel.query().exec_()
+        self.lvs.vb.refresh() # liability view
 
     def createSystemTray(self):
         self.trayIconMenu = QtGui.QMenu(self)
@@ -293,12 +293,12 @@ class Desktop(QtGui.QMainWindow):
         if reason in (QtGui.QSystemTrayIcon.Trigger, QtGui.QSystemTrayIcon.DoubleClick):
             self.showNormal()
 
-    def closeEvent(self, event):
-        if self.trayIcon.isVisible():
-            # QtGui.QMessageBox.information(self, u"最小化",
-            #         u"系统将最小化至系统托盘，如果退出请选择“系统->退出”")
-            self.hide()
-            event.ignore()
+    # def closeEvent(self, event):
+    #     if self.trayIcon.isVisible():
+    #         # QtGui.QMessageBox.information(self, u"最小化",
+    #         #         u"系统将最小化至系统托盘，如果退出请选择“系统->退出”")
+    #         self.hide()
+    #         event.ignore()
 
     def about(self):
          QtGui.QMessageBox.about(self, u"关于CAMP", u"长安信托固定收益部交易管理平台")
