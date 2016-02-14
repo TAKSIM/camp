@@ -76,7 +76,7 @@ class ResetPage(QtGui.QDialog):
     def __init__(self, user):
         QtGui.QDialog.__init__(self)
         self.setWindowTitle(u'重置登录密码')
-        self.setWindowIcon(QtGui.QIcon(u'icons\login.png'))
+        self.setWindowIcon(QtGui.QIcon('icons/login.png'))
         self.setFixedSize(200, 130)
         self.user = user
         self.pwdLayout = QtGui.QGridLayout()

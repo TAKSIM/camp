@@ -1,15 +1,16 @@
 # -*- coding: utf-8 -*-
 from login import LoginPage
+import datetime
 import env
 from inst.lifecycle import Book, Deal
 from PyQt4 import Qt, QtGui, QtCore, QtSql
 from dataview.view_subdetails import LiabilityViewSet
 from dataview.view_books import BookViewSet
 from panel.panel_log import LogPanel, LogStream
-from WindPy import *
+#from WindPy import *
 from matplotlibwidget import MatplotlibWidget
 import ctypes
-import sys
+from settings import ColorWhite, ColorHighlightText
 ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID('myappid')
 
 
@@ -17,7 +18,7 @@ class Desktop(QtGui.QMainWindow):
     def __init__(self):
         QtGui.QMainWindow.__init__(self)
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
-        self.td = datetime.today()
+        self.td = datetime.date.today()
         self.initDB()
         login = LoginPage()
         if login.exec_():
@@ -31,16 +32,24 @@ class Desktop(QtGui.QMainWindow):
             self.createAction()
             self.createMenu()
             self.createSystemTray()
-            self.createPages()
 
-            layout = QtGui.QHBoxLayout()
+            layout = QtGui.QGridLayout()
             self.centralWidget = QtGui.QWidget()
             self.centralWidget.setLayout(layout)
             self.setCentralWidget(self.centralWidget)
             self.treecontrol = TreeControl()
             self.treecontrol.clickSignal.connect(self.switchLayout)
-            layout.addWidget(self.treecontrol)
-            layout.addLayout(self.stackedLayout)
+            self.createPages()
+            self.topLayout = QtGui.QHBoxLayout()
+            self.sysdate = QtGui.QDateEdit(datetime.date.today())
+            self.sysdate.setCalendarPopup(True)
+            self.sysdate.setFixedWidth(120)
+            self.sysdate.dateChanged.connect(self.on_sysdate_change)
+            self.sysdate.setToolTip(u'系统日期')
+            self.topLayout.addWidget(self.sysdate, alignment=QtCore.Qt.AlignLeft)
+            layout.addLayout(self.topLayout, 0, 0, 1, 7)
+            layout.addWidget(self.treecontrol, 1, 0, 20, 1)
+            layout.addLayout(self.stackedLayout, 1, 1, 20, 6)
 
             self.centralWidget = QtGui.QWidget()
             self.centralWidget.setLayout(layout)
@@ -54,7 +63,16 @@ class Desktop(QtGui.QMainWindow):
             #w.start()
             self.statusBar().showMessage(u'准备就绪')
         else:
+            login.close()
+            self.close()
             QtGui.qApp.quit()
+
+    def on_sysdate_change(self):
+        cd = self.sysdate.date().toPyDate()
+        td = datetime.date.today()
+        p = QtGui.QPalette()
+        p.setColor(p.Base, cd==td and ColorWhite or ColorHighlightText)
+        self.sysdate.setPalette(p)
 
     def createPages(self):
         self.stackedLayout = QtGui.QStackedLayout()
@@ -238,17 +256,7 @@ class Desktop(QtGui.QMainWindow):
         import tradepanel
         bond = tradepanel.BondPanel(self.books)
         if bond.exec_():
-            bookID = bond.books.currentIndex()
-            instID = str(bond.code.text())
-            bookDate = bond.tradeDate.date()
-            daysToSettle = int(bond.settle.text())
-            if daysToSettle == 0:
-                settleDate = bookDate
-            else:
-                settleDate = w.tdaysoffset(daysToSettle, bookDate).Data[0][0].date()
-            amount = float(bond.amount.text())*10000.
-
-            #user, bookID, instID, bookDate, settleDate, amount, tradePrice
+            pass
 
     def showMmfPanel(self):
         import tradepanel
@@ -306,12 +314,13 @@ class Desktop(QtGui.QMainWindow):
 
 class TreeControl(QtGui.QTreeWidget):
     clickSignal = QtCore.pyqtSignal(str)
+
     def __init__(self, parent=None):
         QtGui.QTreeWidget.__init__(self, parent)
         self.setHeaderHidden(True)
         self.addItems(self.invisibleRootItem())
         self.itemClicked.connect(self.handleClicked)
-        self.setMaximumWidth(120)
+        self.setFixedWidth(120)
 
     def addItems(self, parent):
         assets_item = self.addParent(parent, u'资产' )
