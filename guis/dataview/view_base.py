@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-from PyQt4 import QtGui, QtSql, QtCore
+from PyQt4 import QtGui, QtSql, QtCore, Qt
+import xlsxwriter
 
 
 class NumberDelegate(QtGui.QStyledItemDelegate):
@@ -24,10 +25,13 @@ class DateDelegate(QtGui.QStyledItemDelegate):
 
 
 class ViewBase(QtGui.QTableView):
-    def __init__(self, query, header, menu=False, parent=None):
+    def __init__(self, query, header, tablename, datatypes, menu=False, parent=None):
+        # data types: s: string, d: date, t: datetime, f: float, i: int
         QtGui.QTableView.__init__(self, parent)
         self.query = query
         self.header = header
+        self.tablename = tablename
+        self.datatypes = datatypes
 
         self.dataModel = QtSql.QSqlQueryModel()
         self.dataModel.setQuery(self.query)
@@ -52,6 +56,20 @@ class ViewBase(QtGui.QTableView):
             self.customContextMenuRequested.connect(self.showRightClickMenu)
             self.buildMenu()
 
+    def convert_to_output(self, vtype, value):
+        if vtype=='s':
+            return unicode(value.toString())
+        elif vtype=='d':
+            return str(value.toDate().toString(QtCore.Qt.ISODate))
+        elif vtype=='t':
+            return str(value.toDateTime().toString('yyyy-MM-dd hh:mm:ss'))
+        elif vtype=='f':
+            v, s = value.toDouble()
+            return s and v or 'NaN'
+        elif vtype=='i':
+            v, s = value.toInt()
+            return s and v or 'NaN'
+
     def buildMenu(self):
         raise NotImplemented()
 
@@ -60,6 +78,22 @@ class ViewBase(QtGui.QTableView):
 
     def refresh(self):
         self.dataModel.query().exec_()
+
+    def exportToExcel(self):
+        fn = QtGui.QFileDialog.getSaveFileName(self, u'保存文件', '', 'Excel File (*.xlsx)')
+        if fn != '':
+            try:
+                wb = xlsxwriter.Workbook(str(fn))
+                ws = wb.add_worksheet(self.tablename)
+                ws.write_row(0, 0, self.header)
+                numCols = len(self.header)
+                for i in range(self.model().rowCount()):
+                    for j in range(numCols):
+                        ws.write(i+1, j, self.convert_to_output(self.datatypes[j], self.model().index(i,j).data()))
+                wb.close()
+            except Exception, e:
+                QtGui.QMessageBox.warning(self, u'错误', u'无法保存文件，请检查文件是否被占用')
+                print e.message
 
 class ViewBaseSet:
     def __init__(self, vb, parent=None):
@@ -74,6 +108,9 @@ class ViewBaseSet:
 
         self.btnRefresh = QtGui.QPushButton(u'刷新')
         self.btnRefresh.clicked.connect(self.vb.refresh)
+
+        self.btnExportToExcel = QtGui.QPushButton(u'导出至Excel')
+        self.btnExportToExcel.clicked.connect(self.vb.exportToExcel)
 
     def filterRegExpChanged(self):
         syntax_nr = QtCore.QRegExp.FixedString

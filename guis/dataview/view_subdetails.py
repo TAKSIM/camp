@@ -35,6 +35,8 @@ class LiabilityView(ViewBase):
                       u'封闭期起始日' , # 9
                       u'期限', # 10
                       u'到期操作'], # 11
+            tablename=u'申购信息',
+            datatypes='ddfssssffdis',
             menu    = True,
             parent  = parent)
         self.sysdate = sysdate
