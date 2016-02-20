@@ -107,7 +107,7 @@ class Desktop(QtGui.QMainWindow):
         layout_subdetails = QtGui.QGridLayout()
         self.newsub = QtGui.QPushButton(u'添加认购信息')
         self.newsub.clicked.connect(self.showNewSub)
-        self.lvs = LiabilityViewSet()
+        self.lvs = LiabilityViewSet(self.td)
         layout_subdetails.addWidget(self.lvs.btnRefresh, 0, 0, 1, 1)
         layout_subdetails.addWidget(self.lvs.cbShowLiveOnly, 0, 1, 1, 1)
         layout_subdetails.addWidget(self.newsub, 0, 2, 1, 1)
