@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from PyQt4 import QtGui, QtSql, QtCore
-from view_base import ViewBase, ViewBaseSet, NumberDelegate, DateDelegate
+from view_base import ViewBase, ViewBaseSet, NumberDelegate, DateDelegate, ProgressBarDelegate
 import datetime
 
 class LiabilityView(ViewBase):
@@ -45,9 +45,11 @@ class LiabilityView(ViewBase):
         nfAmt = NumberDelegate(parent=self, withComma=True, numDigits=0)
         nfPct = NumberDelegate(parent=self, withComma=False, numDigits=2)
         df = DateDelegate(parent=self)
+        pb = ProgressBarDelegate(0,600000000, parent=self)
+
         self.setItemDelegateForColumn(0, df)
         self.setItemDelegateForColumn(1, df)
-        self.setItemDelegateForColumn(2, nfAmt)
+        self.setItemDelegateForColumn(2, pb)
         self.setItemDelegateForColumn(7, nfAmt)
         self.setItemDelegateForColumn(8, nfPct)
         self.setItemDelegateForColumn(9, df)

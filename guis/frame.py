@@ -8,7 +8,10 @@ from dataview.view_subdetails import LiabilityViewSet
 from dataview.view_books import BookViewSet
 from panel.panel_log import LogPanel, LogStream
 #from WindPy import *
-from matplotlibwidget import MatplotlibWidget
+import pandas as pd
+from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as figureCanvas
+import seaborn as sns
+import matplotlib.pyplot as plt
 import ctypes
 from settings import ColorWhite, ColorHighlightText
 ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID('myappid')
@@ -29,6 +32,12 @@ class Desktop(QtGui.QMainWindow):
             self.logstream.message.connect(self.log.on_stream_update)
             sys.stdout = self.logstream
 
+            self.sysdate = QtGui.QDateEdit(datetime.date.today())
+            self.sysdate.setCalendarPopup(True)
+            self.sysdate.setFixedWidth(120)
+            self.sysdate.dateChanged.connect(self.on_sysdate_change)
+            self.sysdate.setToolTip(u'系统日期')
+
             self.createAction()
             self.createMenu()
             self.createSystemTray()
@@ -41,11 +50,7 @@ class Desktop(QtGui.QMainWindow):
             self.treecontrol.clickSignal.connect(self.switchLayout)
             self.createPages()
             self.topLayout = QtGui.QHBoxLayout()
-            self.sysdate = QtGui.QDateEdit(datetime.date.today())
-            self.sysdate.setCalendarPopup(True)
-            self.sysdate.setFixedWidth(120)
-            self.sysdate.dateChanged.connect(self.on_sysdate_change)
-            self.sysdate.setToolTip(u'系统日期')
+
             self.topLayout.addWidget(self.sysdate, alignment=QtCore.Qt.AlignLeft)
             layout.addLayout(self.topLayout, 0, 0, 1, 7)
             layout.addWidget(self.treecontrol, 1, 0, 20, 1)
@@ -130,17 +135,36 @@ class Desktop(QtGui.QMainWindow):
 
     def createSubOverviewPage(self):
         layout = QtGui.QGridLayout()
-        q = QtSql.QSqlQuery("""select client_type, sum(amount) from liability where exp_date>='%s' group by client_type"""%self.td)
-        byInstTypeLabels = []
-        byInstTypeValues = []
+        w = QtGui.QWidget()
+        sns.set(style="whitegrid")
+        f, ax = plt.subplots(figsize=(15, 8))
+        canvas = figureCanvas(f)
+        canvas.setParent(w)
+        sns.set(style="whitegrid")
+        q = QtSql.QSqlQuery("""SELECT EXP_DATE, SUM(AMOUNT), SUM(AMOUNT*(1+EXP_RETURN*(datediff(EXP_DATE, SETTLE_DATE)+1)/36500.0)) FROM LIABILITY WHERE EXP_DATE>='%s' GROUP BY EXP_DATE ORDER BY EXP_DATE"""%self.td)
+        dates, vals = [], []
+        x_amt = range(0,1000000000,100000000)
         while q.next():
-            byInstTypeLabels.append(q.value(0).toString())
-            byInstTypeValues.append(q.value(1).toDouble()[0]/100000000.)
-        fw = MatplotlibWidget(parent=self, width=1, height=1, title='TEST ONLY')
-        subplot = fw.figure.add_subplot(111)
-        subplot.pie(byInstTypeValues, labels=byInstTypeLabels, autopct='%1.1f%%')
-        fw.draw()
-        layout.addWidget(fw,0,0,1,1)
+            dates.append(q.value(0).toDate().toPyDate().isoformat())
+            vals.append((q.value(1).toDouble()[0], q.value(2).toDouble()[0]))
+        data = pd.DataFrame(vals, index=dates, columns=['Amount', 'Total Return'])
+        print data
+        # Plot the total crashes
+        sns.set_color_codes("pastel")
+        sns.barplot(x='Total Return', y=dates, data=data,
+                    label='Interest', color="b")
+
+        # Plot the crashes where alcohol was involved
+        sns.set_color_codes("muted")
+        sns.barplot(x='Amount', y=dates, data=data,
+                    label="Principal", color="b")
+
+        # Add a legend and informative axis label
+        ax.legend(ncol=2, loc="upper right", frameon=True)
+        ax.set(ylabel="payment date", xlabel="Liability view")
+        sns.despine(left=True, bottom=True)
+
+        layout.addWidget(w,0,0,1,1)
         return layout
 
     def showNewSub(self):

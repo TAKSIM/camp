@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from PyQt4 import QtGui, QtSql, QtCore, Qt
+from PyQt4 import QtGui, QtSql, QtCore
 import xlsxwriter
 
 
@@ -22,6 +22,25 @@ class DateDelegate(QtGui.QStyledItemDelegate):
     def displayText(self, QVariant, QLocale):
         v = QVariant.toDate()
         return v.toString(QtCore.Qt.ISODate)
+
+class ProgressBarDelegate(QtGui.QStyledItemDelegate):
+    def __init__(self, min_value, max_value, parent=None):
+        QtGui.QStyledItemDelegate.__init__(self, parent=parent)
+        self.min_value = min_value
+        self.max_value = max_value
+
+    def paint(self, painter, option, index):
+        item_var = index.data(QtCore.Qt.DisplayRole)
+        item_str = item_var.toPyObject()
+        opts = QtGui.QStyleOptionProgressBarV2()
+        opts.rect = option.rect
+        opts.minimum = self.min_value
+        opts.maximum = self.max_value
+        opts.text = '{:,.0f}'.format(item_str)
+        opts.textAlignment = QtCore.Qt.AlignCenter
+        opts.textVisible = True
+        opts.progress = int(item_str)
+        QtGui.QApplication.style().drawControl(QtGui.QStyle.CE_ProgressBar, opts, painter)
 
 
 class ViewBase(QtGui.QTableView):
@@ -91,6 +110,7 @@ class ViewBase(QtGui.QTableView):
                     for j in range(numCols):
                         ws.write(i+1, j, self.convert_to_output(self.datatypes[j], self.model().index(i,j).data()))
                 wb.close()
+                QtGui.QMessageBox.about(self, u'完成', u'保存文件成功')
             except Exception, e:
                 QtGui.QMessageBox.warning(self, u'错误', u'无法保存文件，请检查文件是否被占用')
                 print e.message
