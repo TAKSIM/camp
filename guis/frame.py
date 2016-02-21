@@ -161,7 +161,7 @@ class Desktop(QtGui.QMainWindow):
 
         # Add a legend and informative axis label
         ax.legend(ncol=2, loc="upper right", frameon=True)
-        ax.set(ylabel="payment date", xlabel="Liability view")
+        ax.set(ylabel="Maturity Date", title='Liability Overview')
         sns.despine(left=True, bottom=True)
 
         layout.addWidget(w,0,0,1,1)
