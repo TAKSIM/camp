@@ -137,7 +137,7 @@ class Desktop(QtGui.QMainWindow):
         layout = QtGui.QGridLayout()
         w = QtGui.QWidget()
         sns.set(style="whitegrid")
-        f, ax = plt.subplots(figsize=(15, 8))
+        f, ax = plt.subplots(figsize=(20, 12))
         canvas = figureCanvas(f)
         canvas.setParent(w)
         sns.set(style="whitegrid")
