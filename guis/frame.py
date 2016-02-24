@@ -148,7 +148,6 @@ class Desktop(QtGui.QMainWindow):
             dates.append(q.value(0).toDate().toPyDate().isoformat())
             vals.append((q.value(1).toDouble()[0], q.value(2).toDouble()[0]))
         data = pd.DataFrame(vals, index=dates, columns=['Amount', 'Total Return'])
-        print data
         # Plot the total crashes
         sns.set_color_codes("pastel")
         sns.barplot(x='Total Return', y=dates, data=data,
@@ -171,13 +170,13 @@ class Desktop(QtGui.QMainWindow):
         from guis.panel.panel_newsub import NewSubscription
         ns = NewSubscription()
         if ns.exec_():
-            pass
+            self.lvs.vb.refresh()
 
     def showNewBook(self):
         from guis.panel.panel_newbook import NewBook
         nb = NewBook()
         if nb.exec_():
-            pass
+            self.bvs.vb.refresh()
 
     def switchLayout(self, itemName):
         if itemName == Qt.QString(u'账户总览'):

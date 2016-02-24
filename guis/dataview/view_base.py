@@ -23,6 +23,7 @@ class DateDelegate(QtGui.QStyledItemDelegate):
         v = QVariant.toDate()
         return v.toString(QtCore.Qt.ISODate)
 
+
 class ProgressBarDelegate(QtGui.QStyledItemDelegate):
     def __init__(self, min_value, max_value, parent=None):
         QtGui.QStyledItemDelegate.__init__(self, parent=parent)
@@ -114,6 +115,7 @@ class ViewBase(QtGui.QTableView):
             except Exception, e:
                 QtGui.QMessageBox.warning(self, u'错误', u'无法保存文件，请检查文件是否被占用')
                 print e.message
+
 
 class ViewBaseSet:
     def __init__(self, vb, parent=None):

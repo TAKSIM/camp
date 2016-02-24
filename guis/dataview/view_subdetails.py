@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 from PyQt4 import QtGui, QtSql, QtCore
 from view_base import ViewBase, ViewBaseSet, NumberDelegate, DateDelegate, ProgressBarDelegate
-import datetime
+from guis.panel.panel_newsub import ConfirmSub
+
 
 class LiabilityView(ViewBase):
     def __init__(self, sysdate, parent=None):
@@ -17,10 +18,10 @@ class LiabilityView(ViewBase):
                     'd.EXP_RETURN, '
                     'd.SETTLE_DATE, '
                     'datediff(d.EXP_DATE, d.SETTLE_DATE)+1, '
-                    'e.OPS_NAME '
+                    'd.COMMENT, '
+                    'd.CONFIRM_DATE '
                     'from liability d '
                     'left outer join sale_type s on s.ID=d.SALE_TYPE '
-                    'left outer join expops_type e on e.id=d.EXP_OPS '
                     'left outer join client_type c on c.id=d.CLIENT_TYPE'
                     """ WHERE EXP_DATE>='%s'""" % sysdate,
             header = [u'认购日', # 0
@@ -34,9 +35,11 @@ class LiabilityView(ViewBase):
                       u'预期收益率(%)', # 8
                       u'封闭期起始日' , # 9
                       u'期限', # 10
-                      u'到期操作'], # 11
+                      u'备注', # 11
+                      u'到账日' # 12
+                      ],
             tablename=u'申购信息',
-            datatypes='ddfssssffdis',
+            datatypes='ddfssssffdisd',
             menu    = True,
             parent  = parent)
         self.sysdate = sysdate
@@ -53,31 +56,45 @@ class LiabilityView(ViewBase):
         self.setItemDelegateForColumn(7, nfAmt)
         self.setItemDelegateForColumn(8, nfPct)
         self.setItemDelegateForColumn(9, df)
+        self.setItemDelegateForColumn(12, df)
 
     def buildMenu(self):
         self.menu = QtGui.QMenu()
         actRemoveRow = QtGui.QAction(u'删除本条记录', self, triggered=self.removeRow)
+        actConfirm = QtGui.QAction(u'确认到账', self, triggered=self.confirmSub)
+        self.menu.addAction(actConfirm)
         self.menu.addAction(actRemoveRow)
 
     def removeRow(self):
         rowIndex = self.currentIndex().row()
-        subcode = self.model().index(rowIndex, 5).data().toString()
-        reply = QtGui.QMessageBox.question(self, u'删除本条记录',
-                                           u'申请书编号：%s'% subcode,
-                                           QtGui.QMessageBox.Yes | QtGui.QMessageBox.No,
-                                           QtGui.QMessageBox.No)
-        if reply == QtGui.QMessageBox.Yes:
-            q = QtSql.QSqlQuery()
-            try:
-                q.exec_("""DELETE FROM LIABILITY WHERE SUB_CODE='%s'""" % subcode)
-                QtSql.QSqlDatabase().commit()
-                self.model().removeRow(rowIndex)
-                self.refresh()
-            except Exception, e:
-                print e.message
-                QtSql.QSqlDatabase().rollback()
+        subcode = self.model().index(rowIndex, 6).data().toString()
+        confdate = self.model().index(rowIndex, 12).data().toString()
+        if confdate.isEmpty():
+            reply = QtGui.QMessageBox.question(self, u'删除本条记录',
+                                               u'申请书编号：%s'% subcode,
+                                               QtGui.QMessageBox.Yes | QtGui.QMessageBox.No,
+                                               QtGui.QMessageBox.No)
+            if reply == QtGui.QMessageBox.Yes:
+                q = QtSql.QSqlQuery()
+                try:
+                    q.exec_("""DELETE FROM LIABILITY WHERE SUB_CODE='%s'""" % subcode)
+                    QtSql.QSqlDatabase().commit()
+                    self.model().removeRow(rowIndex)
+                    self.refresh()
+                except Exception, e:
+                    print e.message
+                    QtSql.QSqlDatabase().rollback()
+        else:
+            QtGui.QMessageBox.warning(self, u'非常规操作', u'资金已经确认到账（申请书编号：%s，到账日：%s），若确实需要删除此条记录，请联系系统管理员' % (subcode, confdate))
 
-
+    def confirmSub(self):
+        rowIndex = self.currentIndex().row()
+        subcode = self.model().index(rowIndex, 6).data().toString()
+        startdate = self.model().index(rowIndex, 9).data().toDate().toPyDate()
+        cs = ConfirmSub(subcode, startdate)
+        if cs.exec_():
+            self.refresh()
+        
 
 class LiabilityViewSet(ViewBaseSet):
     def __init__(self, sysdate, parent=None):
@@ -88,7 +105,7 @@ class LiabilityViewSet(ViewBaseSet):
         self.sortCol.setCurrentIndex(3)
 
     def showlive_switch(self):
-        constraint = """ WHERE EXP_DATE>='%s'""" % self.sysdate
+        constraint = """ WHERE EXP_DATE>='%s'""" % self.vb.sysdate
         if self.cbShowLiveOnly.isChecked():
             self.vb.query = self.vb.query + constraint
         else:

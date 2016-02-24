@@ -225,8 +225,35 @@ class NewSubscription(PanelBase):
         comment = self.comment.text()
         q = QtSql.QSqlQuery()
         try:
-            q.exec_("""INSERT INTO LIABILITY VALUES ('%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s')""" % (
-                code, client_type, client_name, sale_type, amount, rtn, subdate, settledate, expdate, expops, comment))
+            query = """INSERT INTO LIABILITY VALUES ('%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s', '%s')""" % (
+                code, client_type, client_name, sale_type, amount, rtn, subdate, settledate, expdate, expops, comment, '')
+            q.exec_(query)
+            #print query
+            QtSql.QSqlDatabase().commit()
+        except Exception, e:
+            print e.message
+            QtSql.QSqlDatabase().rollback()
+
+
+class ConfirmSub(PanelBase):
+    def __init__(self, subcode, defaultDate = None, parent = None):
+        PanelBase.__init__(self, parent=parent, viewOnly=False)
+        self.subcode = subcode
+        self.setWindowTitle(u'确认到账')
+        layout = QtGui.QVBoxLayout()
+        layout.addWidget(QtGui.QLabel(u'确认申购%s资金到账，到账日：'%subcode))
+        self.confdate = QtGui.QDateEdit(defaultDate or datetime.date.today())
+        self.confdate.setCalendarPopup(True)
+        layout.addWidget(self.confdate)
+        layout.addWidget(self.ok)
+        self.setLayout(layout)
+
+    def toDB(self):
+        q = QtSql.QSqlQuery()
+        try:
+            query = """UPDATE LIABILITY SET CONFIRM_DATE='%s' WHERE SUB_CODE='%s'""" % (self.confdate.date().toPyDate(), self.subcode)
+            q.exec_(query)
+            #print query
             QtSql.QSqlDatabase().commit()
         except Exception, e:
             print e.message
