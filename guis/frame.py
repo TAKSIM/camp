@@ -325,12 +325,22 @@ class Desktop(QtGui.QMainWindow):
         if reason in (QtGui.QSystemTrayIcon.Trigger, QtGui.QSystemTrayIcon.DoubleClick):
             self.showNormal()
 
-    # def closeEvent(self, event):
-    #     if self.trayIcon.isVisible():
-    #         # QtGui.QMessageBox.information(self, u"最小化",
-    #         #         u"系统将最小化至系统托盘，如果退出请选择“系统->退出”")
-    #         self.hide()
-    #         event.ignore()
+    def closeEvent(self, event):
+        q = QtGui.QMessageBox(QtGui.QMessageBox.Question, u'关闭退出', u'确认关闭退出')
+        q.setWindowIcon(QtGui.QIcon(r'icons/tent.png'))
+        q.setStandardButtons(QtGui.QMessageBox.Yes | QtGui.QMessageBox.No)
+        q.setButtonText(QtGui.QMessageBox.Yes, u'确定')
+        q.setButtonText(QtGui.QMessageBox.No, u'取消')
+        answer = q.exec_()
+        if answer == QtGui.QMessageBox.Yes:
+            self.close()
+        else:
+            event.ignore()
+        # if self.trayIcon.isVisible():
+        #     # QtGui.QMessageBox.information(self, u"最小化",
+        #     #         u"系统将最小化至系统托盘，如果退出请选择“系统->退出”")
+        #     self.hide()
+        #     event.ignore()
 
     def about(self):
          QtGui.QMessageBox.about(self, u"关于CAMP", u"长安信托固定收益部交易管理平台")
