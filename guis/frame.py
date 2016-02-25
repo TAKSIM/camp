@@ -65,16 +65,20 @@ class Desktop(QtGui.QMainWindow):
 
             self.show()
             self.statusBar().showMessage(u'启动万得链接...')
-            wst = WindStartThread()
-            wst.finished.connect(self.windlaunched)
-            wst.start()
+            self.wst = WindStartThread()
+            self.wst.finished.connect(self.windlaunched)
+            self.wst.start()
         else:
             login.close()
             self.close()
             QtGui.qApp.quit()
 
     def windlaunched(self):
-        self.statusBar().showMessage(u'万得连接成功')
+        if self.wst.result.ErrorCode == 0:
+            self.statusBar().showMessage(u'万得连接成功')
+        else:
+            print self.wst.result.ErrorCode
+            self.statusBar().showMessage(u'万得连接失败，部分功能无法正常使用')
 
     def on_sysdate_change(self):
         cd = self.sysdate.date().toPyDate()
