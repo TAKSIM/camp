@@ -255,6 +255,7 @@ class ConfirmSub(PanelBase):
             q.exec_(query)
             #print query
             QtSql.QSqlDatabase().commit()
+
         except Exception, e:
             print e.message
             QtSql.QSqlDatabase().rollback()

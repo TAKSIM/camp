@@ -7,7 +7,7 @@ from PyQt4 import Qt, QtGui, QtCore, QtSql
 from dataview.view_subdetails import LiabilityViewSet
 from dataview.view_books import BookViewSet
 from panel.panel_log import LogPanel, LogStream
-#from WindPy import *
+from env import WindStartThread
 import pandas as pd
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as figureCanvas
 import seaborn as sns
@@ -64,13 +64,17 @@ class Desktop(QtGui.QMainWindow):
             self.setWindowIcon(QtGui.QIcon(env.sysIcon))
 
             self.show()
-            self.statusBar().showMessage(u'启动万得链接')
-            #w.start()
-            self.statusBar().showMessage(u'准备就绪')
+            self.statusBar().showMessage(u'启动万得链接...')
+            wst = WindStartThread()
+            wst.finished.connect(self.windlaunched)
+            wst.start()
         else:
             login.close()
             self.close()
             QtGui.qApp.quit()
+
+    def windlaunched(self):
+        self.statusBar().showMessage(u'万得连接成功')
 
     def on_sysdate_change(self):
         cd = self.sysdate.date().toPyDate()

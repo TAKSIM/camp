@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 import hashlib
-from PyQt4 import QtSql
+from PyQt4 import QtSql, QtCore
+from WindPy import *
 
 sysIcon = r'icons\tent.png'
 
 def enum(**enums):
     return type('Enum', (), enums)
+
 
 class User:
     def __init__(self, id):
@@ -48,3 +50,11 @@ class User:
         QtSql.QSqlDatabase().commit()
         self.pwd = hex
 
+
+class WindStartThread(QtCore.QThread):
+    def __init__(self, parent=None):
+        QtCore.QThread.__init__(self, parent=parent)
+        self.result = None
+
+    def run(self):
+        self.result = w.start(showmenu=False)
