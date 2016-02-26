@@ -2,6 +2,7 @@
 from PyQt4 import QtGui, QtSql
 import datetime
 from panel_base import PanelBase
+from trade import CashTrade
 
 
 class NewSubscription(PanelBase):
@@ -236,9 +237,10 @@ class NewSubscription(PanelBase):
 
 
 class ConfirmSub(PanelBase):
-    def __init__(self, subcode, defaultDate = None, parent = None):
+    def __init__(self, subcode, user, defaultDate = None, parent = None):
         PanelBase.__init__(self, parent=parent, viewOnly=False)
         self.subcode = subcode
+        self.user = user
         self.setWindowTitle(u'确认到账')
         layout = QtGui.QVBoxLayout()
         layout.addWidget(QtGui.QLabel(u'确认申购%s资金到账，到账日：'%subcode))
@@ -251,10 +253,17 @@ class ConfirmSub(PanelBase):
     def toDB(self):
         q = QtSql.QSqlQuery()
         try:
-            query = """UPDATE LIABILITY SET CONFIRM_DATE='%s' WHERE SUB_CODE='%s'""" % (self.confdate.date().toPyDate(), self.subcode)
+            confdate = self.confdate.date().toPyDate()
+            query = """UPDATE LIABILITY SET CONFIRM_DATE='%s' WHERE SUB_CODE='%s'""" % (confdate, self.subcode)
             q.exec_(query)
             #print query
             QtSql.QSqlDatabase().commit()
+
+            q = QtSql.QSqlQuery("""SELECT AMOUNT FROM LIABILITY WHERE SUB_CODE='%s'""" % self.subcode)
+            while q.next():
+                amount = q.value(0).toDouble()[0]
+            ct = CashTrade(book=0, trader=self.user.id, tradeDateTime=datetime.datetime.fromordinal(confdate.toordinal()), amount=amount, settledBy=self.user.id, comment=u'申购%s'%self.subcode)
+            ct.toDB()
 
         except Exception, e:
             print e.message

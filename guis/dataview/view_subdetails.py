@@ -5,7 +5,7 @@ from guis.panel.panel_newsub import ConfirmSub
 
 
 class LiabilityView(ViewBase):
-    def __init__(self, sysdate, parent=None):
+    def __init__(self, sysdate, user, parent=None):
         ViewBase.__init__(self,
             query = 'select d.SUB_DATE, '
                     'd.EXP_DATE, '
@@ -43,6 +43,7 @@ class LiabilityView(ViewBase):
             menu    = True,
             parent  = parent)
         self.sysdate = sysdate
+        self.user = user
 
         self.sortByColumn(0, QtCore.Qt.DescendingOrder)
         nfAmt = NumberDelegate(parent=self, withComma=True, numDigits=0)
@@ -91,14 +92,14 @@ class LiabilityView(ViewBase):
         rowIndex = self.currentIndex().row()
         subcode = self.model().index(rowIndex, 6).data().toString()
         startdate = self.model().index(rowIndex, 9).data().toDate().toPyDate()
-        cs = ConfirmSub(subcode, startdate)
+        cs = ConfirmSub(subcode, self.user, startdate)
         if cs.exec_():
             self.refresh()
         
 
 class LiabilityViewSet(ViewBaseSet):
-    def __init__(self, sysdate, parent=None):
-        ViewBaseSet.__init__(self, LiabilityView(sysdate), parent)
+    def __init__(self, sysdate, user, parent=None):
+        ViewBaseSet.__init__(self, LiabilityView(sysdate, user), parent)
         self.cbShowLiveOnly = QtGui.QCheckBox(u'只显示未到期')
         self.cbShowLiveOnly.setChecked(True)
         self.cbShowLiveOnly.stateChanged.connect(self.showlive_switch)

@@ -5,6 +5,7 @@ import env
 from inst.lifecycle import Book, Deal
 from PyQt4 import Qt, QtGui, QtCore, QtSql
 from dataview.view_subdetails import LiabilityViewSet
+from dataview.view_tradedetails import TradeViewSet
 from dataview.view_books import BookViewSet
 from panel.panel_log import LogPanel, LogStream
 from env import WindStartThread
@@ -94,7 +95,17 @@ class Desktop(QtGui.QMainWindow):
         self.stackedLayout.addWidget(self.acctview)
 
         # trade details
-        self.tradedetails = QtGui.QLabel(u'交易明细')
+        self.tradedetails = QtGui.QWidget()
+        layout_tradedetails = QtGui.QGridLayout()
+        self.tvs = TradeViewSet(self.td, self.user)
+        layout_tradedetails.addWidget(self.tvs.btnRefresh,0,0,1,1)
+        layout_tradedetails.addWidget(self.tvs.btnExportToExcel,0,1,1,1)
+        layout_tradedetails.addWidget(QtGui.QLabel(u'筛选列'),0,2,1,1)
+        layout_tradedetails.addWidget(self.tvs.sortCol,0,3,1,1)
+        layout_tradedetails.addWidget(QtGui.QLabel(u'列包含'),0,4,1,1)
+        layout_tradedetails.addWidget(self.tvs.sortContent,0,5,1,1)
+        layout_tradedetails.addWidget(self.tvs.vb,1,0,1,6)
+        self.tradedetails.setLayout(layout_tradedetails)
         self.stackedLayout.addWidget(self.tradedetails)
 
         # book details
@@ -120,7 +131,7 @@ class Desktop(QtGui.QMainWindow):
         layout_subdetails = QtGui.QGridLayout()
         self.newsub = QtGui.QPushButton(u'添加认购信息')
         self.newsub.clicked.connect(self.showNewSub)
-        self.lvs = LiabilityViewSet(self.td)
+        self.lvs = LiabilityViewSet(self.td, self.user)
         layout_subdetails.addWidget(self.newsub, 0, 0, 1, 1)
         layout_subdetails.addWidget(self.lvs.btnExportToExcel, 0, 1, 1, 1)
         layout_subdetails.addWidget(self.lvs.cbShowLiveOnly, 0, 2, 1, 1)

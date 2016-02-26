@@ -24,6 +24,15 @@ class DateDelegate(QtGui.QStyledItemDelegate):
         return v.toString(QtCore.Qt.ISODate)
 
 
+class DateTimeDelegate(QtGui.QStyledItemDelegate):
+    def __init__(self, parent=None):
+        QtGui.QStyledItemDelegate.__init__(self, parent)
+
+    def displayText(self, QVariant, QLocale):
+        v = QVariant.toDateTime()
+        return v.toString('yyyy-MM-dd hh:mm:ss')
+
+
 class ProgressBarDelegate(QtGui.QStyledItemDelegate):
     def __init__(self, min_value, max_value, parent=None):
         QtGui.QStyledItemDelegate.__init__(self, parent=parent)
