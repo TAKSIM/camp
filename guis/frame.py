@@ -6,6 +6,7 @@ from inst.lifecycle import Book, Deal
 from PyQt4 import Qt, QtGui, QtCore, QtSql
 from dataview.view_subdetails import LiabilityViewSet
 from dataview.view_tradedetails import TradeViewSet
+from dataview.view_booksum import PositionViewSet
 from dataview.view_books import BookViewSet
 from panel.panel_log import LogPanel, LogStream
 from env import WindStartThread
@@ -91,7 +92,30 @@ class Desktop(QtGui.QMainWindow):
     def createPages(self):
         self.stackedLayout = QtGui.QStackedLayout()
         # acct overview
-        self.acctview = QtGui.QLabel(u'账户总览')
+        self.acctview = QtGui.QWidget()
+        layout_acctview = QtGui.QGridLayout()
+        self.avs =PositionViewSet(self.td)
+        gbTrade = QtGui.QGroupBox(u'交易')
+        tradeLayout = QtGui.QHBoxLayout()
+        self.btnTrade = QtGui.QPushButton(u'一般交易')
+        self.btnTradeCash = QtGui.QPushButton(u'现金流调整')
+        self.btnTradeDepo = QtGui.QPushButton(u'同业存款')
+
+        self.btnCollateralBond = QtGui.QPushButton(u'押券')
+        tradeLayout.addWidget(self.btnTrade)
+        tradeLayout.addWidget(self.btnTradeCash)
+        tradeLayout.addWidget(self.btnTradeDepo)
+        tradeLayout.addWidget(self.btnCollateralBond)
+        gbTrade.setLayout(tradeLayout)
+        layout_acctview.addWidget(gbTrade, 0, 0, 1, 4)
+        layout_acctview.addWidget(self.avs.btnRefresh, 1, 0, 1, 1)
+        layout_acctview.addWidget(self.avs.btnExportToExcel, 1, 1, 1, 1)
+        layout_acctview.addWidget(QtGui.QLabel(u'筛选列'), 1, 2, 1, 1)
+        layout_acctview.addWidget(self.avs.sortCol, 1, 3, 1, 1)
+        layout_acctview.addWidget(QtGui.QLabel(u'列包含'), 1, 4, 1, 1)
+        layout_acctview.addWidget(self.avs.sortContent, 1, 5, 1, 1)
+        layout_acctview.addWidget(self.avs.vb, 2, 0, 1, 6)
+        self.acctview.setLayout(layout_acctview)
         self.stackedLayout.addWidget(self.acctview)
 
         # trade details
@@ -184,6 +208,12 @@ class Desktop(QtGui.QMainWindow):
 
         layout.addWidget(w,0,0,1,1)
         return layout
+
+    def showNewDepoTrade(self):
+        from guis.panel.panel_newdepo import NewDepo
+        nd = NewDepo()
+        if nd.exec_():
+            self.avs.vb.refresh()
 
     def showNewSub(self):
         from guis.panel.panel_newsub import NewSubscription

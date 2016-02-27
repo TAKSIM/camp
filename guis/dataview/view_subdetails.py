@@ -91,10 +91,14 @@ class LiabilityView(ViewBase):
     def confirmSub(self):
         rowIndex = self.currentIndex().row()
         subcode = self.model().index(rowIndex, 6).data().toString()
-        startdate = self.model().index(rowIndex, 9).data().toDate().toPyDate()
-        cs = ConfirmSub(subcode, self.user, startdate)
-        if cs.exec_():
-            self.refresh()
+        confdate = self.model().index(rowIndex, 12).data().toString()
+        if confdate.isEmpty():
+            startdate = self.model().index(rowIndex, 9).data().toDate().toPyDate()
+            cs = ConfirmSub(subcode, self.user, startdate)
+            if cs.exec_():
+                self.refresh()
+        else:
+            QtGui.QMessageBox.warning(self, u'非常规操作', u'资金已经确认到账（申请书编号：%s，到账日：%s），若确实需要调整到账日及现金流，请联系系统管理员' % (subcode, confdate))
         
 
 class LiabilityViewSet(ViewBaseSet):

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from view_base import ViewBase, ViewBaseSet, NumberDelegate, DateDelegate, DateTimeDelegate
 from PyQt4 import QtCore, QtGui, QtSql
+import datetime
 
 
 class TradeView(ViewBase):
@@ -20,8 +21,8 @@ class TradeView(ViewBase):
                                 'FROM TRADES t '
                                 'LEFT OUTER JOIN BOOKS b on b.ID=t.BOOK '
                                 'LEFT OUTER JOIN USERS u on u.ID=t.TRADER '
-                                'LEFT OUTER JOIN SECINFO s on s.CODE=t.INST_CODE '
-                                """ WHERE t.TRADE_DATETIME<='%s'""" % sysdate,
+                                'LEFT OUTER JOIN SECINFO s on s.SEC_CODE=t.INST_CODE '
+                                """ WHERE t.TRADE_DATETIME<='%s'""" % datetime.datetime(sysdate.year, sysdate.month, sysdate.day, 23, 59, 59),
                           header=[u'交易日', # 0
                                   u'账簿', # 1
                                   u'交易员', # 2
