@@ -21,7 +21,7 @@ class Trade:
             self.tradeID = tradeID
         else:
             m = hashlib.sha1()
-            m.update(self.trader + str(self.tradeDateTime))
+            m.update(self.trader + str(self.tradeDateTime) + self.comment.encode('GB2312') + str(self.amount) + refTrade + str(self.price) + str(self.refYield))
             self.tradeID = m.hexdigest()
 
     def toDB(self):

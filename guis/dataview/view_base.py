@@ -106,7 +106,8 @@ class ViewBase(QtGui.QTableView):
         self.menu.exec_(QtGui.QCursor.pos())
 
     def refresh(self):
-        self.dataModel.query().exec_()
+        #self.dataModel.query().exec_()
+        self.dataModel.setQuery(self.query)
 
     def exportToExcel(self):
         fn = QtGui.QFileDialog.getSaveFileName(self, u'保存文件', '', 'Excel File (*.xlsx)')

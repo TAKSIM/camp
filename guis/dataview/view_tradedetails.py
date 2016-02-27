@@ -81,6 +81,7 @@ class TradeView(ViewBase):
             q.exec_(query)
             #print query
             QtSql.QSqlDatabase().commit()
+            self.refresh()
         except Exception, e:
             print e.message
             QtSql.QSqlDatabase().rollback()
