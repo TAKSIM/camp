@@ -7,7 +7,7 @@ from trade import CashTrade
 
 class NewSubscription(PanelBase):
     def __init__(self, parent=None, viewOnly=False, **kwargs):
-        PanelBase.__init__(self, parent, viewOnly, **kwargs)
+        super(NewSubscription, self).__init__(parent, viewOnly, **kwargs)
         self.standardtenors = ['14', '30', '60', '90', '120', '150', '180', '210', '240', '270', '300', '330', '360', '720']
         self.setWindowTitle(u'添加认购信息')
         td = datetime.date.today()
@@ -238,7 +238,7 @@ class NewSubscription(PanelBase):
 
 class ConfirmSub(PanelBase):
     def __init__(self, subcode, user, defaultDate = None, parent = None):
-        PanelBase.__init__(self, parent=parent, viewOnly=False)
+        super(ConfirmSub, self).__init__(parent=parent, viewOnly=False)
         self.subcode = subcode
         self.user = user
         self.setWindowTitle(u'确认到账')

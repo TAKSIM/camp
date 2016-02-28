@@ -2,9 +2,10 @@
 from PyQt4 import QtGui
 from guis.settings import ColorWhite, ColorRed
 
+
 class PanelBase(QtGui.QDialog):
     def __init__(self, parent=None, viewOnly=False, **kwargs):
-        QtGui.QDialog.__init__(self, parent)
+        super(PanelBase, self).__init__(parent)
         self.setWindowIcon(QtGui.QIcon('icons/tent.png'))
         self.viewOnly = viewOnly
         if not self.viewOnly:

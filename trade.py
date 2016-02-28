@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 import hashlib
-from PyQt4 import QtSql
+from PyQt4 import QtSql, QtCore
 
 
-class Trade:
+class Trade(object):
     def __init__(self, *args, **kwargs):
         if len(args) > 1:
             book, trader, tradeDateTime, settleDate, instCode, amount, price = args
@@ -39,26 +39,35 @@ class Trade:
             print e.message
             QtSql.QSqlDatabase().rollback()
 
-    def fromDB(self):
-        if self.tradeID:
-            q = QtSql.QSqlQuery("""SELECT * FROM TRADES WHERE TRADE_ID='%s'""" % self.tradeID)
+    @staticmethod
+    def fromDB(tradeID):
+        q = QtSql.QSqlQuery("""SELECT * FROM TRADES WHERE TRADE_ID='%s'""" % tradeID)
+        while q.next():
+            book = q.value(1).toInt()[0]
+            trader = str(q.value(2).toString())
+            tradeDateTime = q.value(3).toDateTime().toPyDateTime()
+            settleDate = q.value(4).toDate().toPyDate()
+            instCode = str(q.value(5).toString())
+            amount = q.value(6).toDouble()[0]
+            price = q.value(7).toDouble()[0]
+            collateralized = bool(q.value(8).toInt()[0])
+            refTrade = str(q.value(9).toString())
+            refYield = q.value(10).toDouble()[0]
+            settledBy = str(q.value(11).toString())
+            comment = str(q.value(12).toString())
+            md = q.value(13).toDate()
+            maturityDate = md and md.toPyDate() or None
+            q = QtSql.QSqlQuery("""SELECT SEC_TYPE FROM SECINFO WHERE SEC_CODE='%s'""" % instCode)
             while q.next():
-                self.book = q.value(1).toInt()[0]
-                self.trader = str(q.value(2).toString())
-                self.tradeDateTime = q.value(3).toDateTime().toPyDateTime()
-                self.settleDate = q.value(4).toDate().toPyDate()
-                self.instCode = str(q.value(5).toString())
-                self.amount = q.value(6).toDouble()[0]
-                self.price = q.value(7).toDouble()[0]
-                self.collateralized = bool(q.value(8).toInt()[0])
-                self.refTrade = str(q.value(9).toString())
-                self.refYield = q.value(10).toDouble()[0]
-                self.settledBy = str(q.value(11).toString())
-                self.comment = str(q.value(12).toString())
-                md = q.value(13).toDate()
-                self.maturityDate = md and md.toPyDate() or ''
-                return True
-        return False
+                secname = q.value(0).toString()
+                if secname == QtCore.QString(u'现金'):
+                    obj = CashTrade(book, trader, tradeDateTime, amount, instCode=instCode, refTrade=refTrade, comment=comment,tradeID=tradeID)
+                    return obj
+                elif secname == QtCore.QString(u'存款'):
+                    obj = DepoTrade(book, trader, tradeDateTime, amount, refYield, maturityDate, dcc='Act/360', settledBy=settledBy, comment=comment, tradeID=tradeID)
+                    return obj
+                else:
+                    raise NotImplementedError('Unknown trade type')
 
     def settle(self, trader):
         q = QtSql.QSqlQuery()
@@ -81,7 +90,7 @@ class Trade:
 
 class CashTrade(Trade):
     def __init__(self, book, trader, tradeDateTime, amount, instCode='CASH_IB', refTrade='', comment='', tradeID=None):
-        Trade.__init__(self, book, trader, tradeDateTime, tradeDateTime.date(), instCode, amount, 1.0,
+        super(CashTrade, self).__init__(book, trader, tradeDateTime, tradeDateTime.date(), instCode, amount, 1.0,
                        collateralized=False, refTrade=refTrade, refYield=0, settledBy=trader, comment=comment, tradeID=tradeID)
 
     def value(self, asOfDate):
@@ -90,7 +99,7 @@ class CashTrade(Trade):
 
 class DepoTrade(Trade):
     def __init__(self, book, trader, tradeDateTime, amount, rtn, maturityDate, dcc='Act/360', settledBy='', comment='', tradeID=None):
-        Trade.__init__(self, book, trader, tradeDateTime, tradeDateTime.date(), 'IBDP', amount, 1.0,
+        super(DepoTrade, self).__init__(book, trader, tradeDateTime, tradeDateTime.date(), 'IBDP', amount, 1.0,
                        collateralized=False, refTrade='', refYield=rtn, settledBy=settledBy, comment=comment, maturityDate=maturityDate, tradeID=tradeID)
 
     def totalReturn(self):
@@ -104,7 +113,7 @@ class DepoTrade(Trade):
         return 0.
 
     def settle(self, trader):
-        Trade.settle(self, trader=trader)
+        super(DepoTrade, self).settle(trader=trader)
         ct = CashTrade(self.book, trader, self.tradeDateTime, -self.amount, instCode='CASH_IB', refTrade=self.tradeID, comment=u'同存存出')
         ct.toDB()
 

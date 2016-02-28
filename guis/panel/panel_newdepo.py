@@ -7,7 +7,7 @@ from trade import DepoTrade
 
 class NewDepo(PanelBase):
     def __init__(self, user, parent=None):
-        PanelBase.__init__(self, parent=parent)
+        super(NewDepo, self).__init__(parent=parent)
         self.setWindowTitle(u'同业存款')
         self.user = user
         layout = QtGui.QGridLayout()
@@ -75,7 +75,7 @@ class NewDepo(PanelBase):
                 startDate = self.tradeDateTime.date().toPyDate()
                 endDate = self.expdate.date().toPyDate()
                 if endDate > startDate:
-                    self.total.setText('{:,.2f}'.format((endDate-startDate).days/360.0*rtn/100.0*amount))
+                    self.total.setText('{:,.2f}'.format((1+(endDate-startDate).days/360.0*rtn/100.0)*amount))
 
     def check_validity(self, raiseWarning=False):
         if self.expdate.date().toPyDate() <= self.tradeDateTime.date().toPyDate():

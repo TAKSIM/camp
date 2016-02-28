@@ -7,7 +7,7 @@ from trade import CashTrade
 
 class NewIB2EX(PanelBase):
     def __init__(self, sysdate, user, parent=None):
-        PanelBase.__init__(self, parent=parent)
+        super(NewIB2EX, self).__init__(parent=parent)
         self.setWindowTitle(u'银证转账')
         self.sysdate = sysdate
         self.user = user
@@ -43,7 +43,7 @@ class NewIB2EX(PanelBase):
 
     def toDB(self):
         amount = self.amount.text().toDouble()[0]
-        ib2ex = self.ib2ex.currentIndex() and -1. or 1.
+        ib2ex = self.ib2ex.currentIndex()==0 and -1. or 1.
         tradeDateTime = self.settleDate.dateTime().toPyDateTime()
         ctIB = CashTrade(book=self.books.currentIndex(),
                         trader=self.user,

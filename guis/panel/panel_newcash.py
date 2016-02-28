@@ -7,7 +7,7 @@ from trade import CashTrade
 
 class NewCash(PanelBase):
     def __init__(self, user, parent=None):
-        PanelBase.__init__(self, parent=parent)
+        super(NewCash, self).__init__(parent=parent)
         self.setWindowTitle(u'现金流调整')
         self.user = user
         layout = QtGui.QGridLayout()

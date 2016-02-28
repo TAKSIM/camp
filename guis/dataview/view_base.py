@@ -5,7 +5,7 @@ import xlsxwriter
 
 class NumberDelegate(QtGui.QStyledItemDelegate):
     def __init__(self, parent=None, withComma=True, numDigits=2):
-        QtGui.QStyledItemDelegate.__init__(self, parent)
+        super(NumberDelegate, self).__init__(parent)
         self.withComma = withComma
         self.numDigits = numDigits
         self.strformat = withComma and '{:,.%sf}' % self.numDigits or ('{:.%sf}' % self.numDigits)
@@ -17,7 +17,7 @@ class NumberDelegate(QtGui.QStyledItemDelegate):
 
 class DateDelegate(QtGui.QStyledItemDelegate):
     def __init__(self, parent=None):
-        QtGui.QStyledItemDelegate.__init__(self, parent)
+        super(DateDelegate, self).__init__(parent)
 
     def displayText(self, QVariant, QLocale):
         v = QVariant.toDate()
@@ -26,7 +26,7 @@ class DateDelegate(QtGui.QStyledItemDelegate):
 
 class DateTimeDelegate(QtGui.QStyledItemDelegate):
     def __init__(self, parent=None):
-        QtGui.QStyledItemDelegate.__init__(self, parent)
+        super(DateTimeDelegate, self).__init__(parent)
 
     def displayText(self, QVariant, QLocale):
         v = QVariant.toDateTime()
@@ -35,7 +35,7 @@ class DateTimeDelegate(QtGui.QStyledItemDelegate):
 
 class ProgressBarDelegate(QtGui.QStyledItemDelegate):
     def __init__(self, min_value, max_value, parent=None):
-        QtGui.QStyledItemDelegate.__init__(self, parent=parent)
+        super(ProgressBarDelegate, self).__init__(parent=parent)
         self.min_value = min_value
         self.max_value = max_value
 
@@ -56,7 +56,7 @@ class ProgressBarDelegate(QtGui.QStyledItemDelegate):
 class ViewBase(QtGui.QTableView):
     def __init__(self, query, header, tablename, datatypes, menu=False, parent=None):
         # data types: s: string, d: date, t: datetime, f: float, i: int
-        QtGui.QTableView.__init__(self, parent)
+        super(ViewBase, self).__init__(parent)
         self.query = query
         self.header = header
         self.tablename = tablename
@@ -127,7 +127,7 @@ class ViewBase(QtGui.QTableView):
                 print e.message
 
 
-class ViewBaseSet:
+class ViewBaseSet(object):
     def __init__(self, vb, parent=None):
         self.vb = vb
 

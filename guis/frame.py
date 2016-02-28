@@ -21,7 +21,7 @@ ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID('myappid')
 
 class Desktop(QtGui.QMainWindow):
     def __init__(self):
-        QtGui.QMainWindow.__init__(self)
+        super(Desktop, self).__init__()
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
         self.td = datetime.date.today()
         self.initDB()
@@ -311,10 +311,10 @@ class Desktop(QtGui.QMainWindow):
         m1.addAction(self.refreshAction)
         m1.addAction(self.exitAction)
 
-        m2 = self.mb.addMenu(u'&交易')
-        m2.addAction(self.tradeBond)
-        m2.addAction(self.tradeDepo)
-        m2.addAction(self.tradeMmf)
+        # m2 = self.mb.addMenu(u'&交易')
+        # m2.addAction(self.tradeBond)
+        # m2.addAction(self.tradeDepo)
+        # m2.addAction(self.tradeMmf)
 
         m3 = self.mb.addMenu(u'&帮助')
         m3.addAction(self.aboutAction)
@@ -325,9 +325,9 @@ class Desktop(QtGui.QMainWindow):
         self.refreshAction = QtGui.QAction(QtGui.QIcon(r'icons\refresh.png'), u'刷新', self, triggered=self.refresh, shortcut='F5')
         self.holAction = QtGui.QAction(QtGui.QIcon(r'icons\settings.png'), u'假期设置', self, shortcut='Ctrl+H', triggered=self.showHolidayPanel)
 
-        self.tradeBond = QtGui.QAction(u'债券', self, shortcut='Ctrl+B', triggered=self.showBondPanel)
-        self.tradeDepo = QtGui.QAction(u'同业存款', self, shortcut='Ctrl+D', triggered=self.showDepoPanel)
-        self.tradeMmf = QtGui.QAction(u'货币基金', self, shortcut='Ctrl+M', triggered=self.showMmfPanel)
+        # self.tradeBond = QtGui.QAction(u'债券', self, shortcut='Ctrl+B', triggered=self.showBondPanel)
+        # self.tradeDepo = QtGui.QAction(u'同业存款', self, shortcut='Ctrl+D', triggered=self.showDepoPanel)
+        # self.tradeMmf = QtGui.QAction(u'货币基金', self, shortcut='Ctrl+M', triggered=self.showMmfPanel)
 
         self.aboutAction = QtGui.QAction(u"关于CAMP", self, triggered=self.about)
 
@@ -415,7 +415,7 @@ class TreeControl(QtGui.QTreeWidget):
     clickSignal = QtCore.pyqtSignal(str)
 
     def __init__(self, parent=None):
-        QtGui.QTreeWidget.__init__(self, parent)
+        super(TreeControl, self).__init__(parent)
         self.setHeaderHidden(True)
         self.addItems(self.invisibleRootItem())
         self.itemClicked.connect(self.handleClicked)

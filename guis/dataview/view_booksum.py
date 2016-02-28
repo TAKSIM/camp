@@ -6,7 +6,7 @@ import datetime
 
 class PositionView(ViewBase):
     def __init__(self, sysdate, parent=None):
-        ViewBase.__init__(self,
+        super(PositionView, self).__init__(
             query=''.join(['SELECT b.NAME_CN, ',
                 't.INST_CODE, ',
                 's.SEC_NAME, s.SEC_TYPE, s.EXCHANGE, ',
@@ -42,5 +42,5 @@ class PositionView(ViewBase):
 
 class PositionViewSet(ViewBaseSet):
     def __init__(self, sysdate, parent=None):
-        ViewBaseSet.__init__(self, vb=PositionView(sysdate), parent=parent)
+        super(PositionViewSet, self).__init__(vb=PositionView(sysdate), parent=parent)
         self.sortCol.setCurrentIndex(0)

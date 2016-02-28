@@ -6,7 +6,7 @@ from guis.panel.panel_newsub import ConfirmSub
 
 class LiabilityView(ViewBase):
     def __init__(self, sysdate, user, parent=None):
-        ViewBase.__init__(self,
+        super(LiabilityView, self).__init__(
             query = 'select d.SUB_DATE, '
                     'd.EXP_DATE, '
                     'd.AMOUNT*(1+d.EXP_RETURN*(datediff(d.EXP_DATE, d.SETTLE_DATE)+1)/36500.0), '
@@ -103,7 +103,7 @@ class LiabilityView(ViewBase):
 
 class LiabilityViewSet(ViewBaseSet):
     def __init__(self, sysdate, user, parent=None):
-        ViewBaseSet.__init__(self, LiabilityView(sysdate, user), parent)
+        super(LiabilityViewSet, self).__init__(LiabilityView(sysdate, user), parent)
         self.cbShowLiveOnly = QtGui.QCheckBox(u'只显示未到期')
         self.cbShowLiveOnly.setChecked(True)
         self.cbShowLiveOnly.stateChanged.connect(self.showlive_switch)

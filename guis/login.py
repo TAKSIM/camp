@@ -5,7 +5,7 @@ from env import User
 class LoginPage(QtGui.QDialog):
 
     def __init__(self):
-        QtGui.QDialog.__init__(self)
+        super(LoginPage, self).__init__()
         self.setWindowTitle(u'系统登录')
         self.setWindowIcon(QtGui.QIcon(u'icons\login.png'))
         self.setFixedSize(180,120)
@@ -74,7 +74,7 @@ class LoginPage(QtGui.QDialog):
 class ResetPage(QtGui.QDialog):
 
     def __init__(self, user):
-        QtGui.QDialog.__init__(self)
+        super(ResetPage, self).__init__()
         self.setWindowTitle(u'重置登录密码')
         self.setWindowIcon(QtGui.QIcon('icons/login.png'))
         self.setFixedSize(200, 130)

@@ -2,11 +2,12 @@
 from view_base import ViewBase, ViewBaseSet, NumberDelegate, DateDelegate, DateTimeDelegate
 from PyQt4 import QtCore, QtGui, QtSql
 import datetime
+from trade import Trade
 
 
 class TradeView(ViewBase):
     def __init__(self, sysdate, user, parent=None):
-        ViewBase.__init__(self,
+        super(TradeView, self).__init__(
                           query='SELECT t.TRADE_DATETIME, '
                                 'b.NAME_CN, '
                                 'u.NAME, '
@@ -63,15 +64,11 @@ class TradeView(ViewBase):
     def confirmSettle(self):
         rowIndex = self.currentIndex().row()
         tradeID = self.model().index(rowIndex, 12).data().toString()
-        q = QtSql.QSqlQuery()
-        try:
-            query = """UPDATE TRADES SET SETTLED_BY='%s' WHERE TRADE_ID='%s'""" % (self.user.id, tradeID)
-            q.exec_(query)
-            #print query
-            QtSql.QSqlDatabase().commit()
-        except Exception, e:
-            print e.message
-            QtSql.QSqlDatabase().rollback()
+        trd = Trade.fromDB(tradeID)
+        if trd:
+            trd.settle(self.user.id)
+        else:
+            QtGui.QMessageBox.warning(self, u'错误', u'无法从数据库读取该笔交易')
 
     def deleteTrade(self):
         rowIndex = self.currentIndex().row()
@@ -90,5 +87,5 @@ class TradeView(ViewBase):
 
 class TradeViewSet(ViewBaseSet):
     def __init__(self, sysdate, user, parent = None):
-        ViewBaseSet.__init__(self, TradeView(sysdate, user), parent=parent)
+        super(TradeViewSet, self).__init__(TradeView(sysdate, user), parent=parent)
         self.sortCol.setCurrentIndex(1)

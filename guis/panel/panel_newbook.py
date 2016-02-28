@@ -6,7 +6,7 @@ from panel_base import PanelBase
 
 class NewBook(PanelBase):
     def __init__(self, parent=None):
-        PanelBase.__init__(self, parent)
+        super(NewBook, self).__init__(parent)
         self.setWindowTitle(u'新账簿')
         layout = QtGui.QGridLayout()
         layout.addWidget(QtGui.QLabel(u'账簿全称'),0,0,1,1)
