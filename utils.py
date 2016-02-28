@@ -6,6 +6,7 @@ from email.header import Header
 
 encode = 'utf-8'
 
+
 def sendmail(sender, to, subject, contents, texttype='plain'):
     Charset.add_charset(encode, Charset.QP, Charset.QP, encode)
     msg = MIMEText(contents, texttype, encode)

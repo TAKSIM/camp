@@ -113,7 +113,7 @@ class ViewBase(QtGui.QTableView):
         fn = QtGui.QFileDialog.getSaveFileName(self, u'保存文件', '', 'Excel File (*.xlsx)')
         if fn != '':
             try:
-                wb = xlsxwriter.Workbook(str(fn))
+                wb = xlsxwriter.Workbook(unicode(fn))
                 ws = wb.add_worksheet(self.tablename)
                 ws.write_row(0, 0, self.header)
                 numCols = len(self.header)
