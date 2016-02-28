@@ -97,17 +97,21 @@ class Desktop(QtGui.QMainWindow):
         self.avs =PositionViewSet(self.td)
         gbTrade = QtGui.QGroupBox(u'交易')
         tradeLayout = QtGui.QHBoxLayout()
-        self.btnTrade = QtGui.QPushButton(u'一般交易')
+        self.btnTrade = QtGui.QPushButton(u'债券/货基')
         self.btnTradeCash = QtGui.QPushButton(u'现金流调整')
+        self.btnTradeCash.clicked.connect(self.showNewCashTrade)
+        self.btnTradeIBEX = QtGui.QPushButton(u'银证转账')
+        self.btnTradeIBEX.clicked.connect(self.showNewIB2EX)
         self.btnTradeDepo = QtGui.QPushButton(u'同业存款')
-
+        self.btnTradeDepo.clicked.connect(self.showNewDepoTrade)
         self.btnCollateralBond = QtGui.QPushButton(u'押券')
         tradeLayout.addWidget(self.btnTrade)
         tradeLayout.addWidget(self.btnTradeCash)
+        tradeLayout.addWidget(self.btnTradeIBEX)
         tradeLayout.addWidget(self.btnTradeDepo)
         tradeLayout.addWidget(self.btnCollateralBond)
         gbTrade.setLayout(tradeLayout)
-        layout_acctview.addWidget(gbTrade, 0, 0, 1, 4)
+        layout_acctview.addWidget(gbTrade, 0, 0, 1, 6)
         layout_acctview.addWidget(self.avs.btnRefresh, 1, 0, 1, 1)
         layout_acctview.addWidget(self.avs.btnExportToExcel, 1, 1, 1, 1)
         layout_acctview.addWidget(QtGui.QLabel(u'筛选列'), 1, 2, 1, 1)
@@ -209,10 +213,22 @@ class Desktop(QtGui.QMainWindow):
         layout.addWidget(w,0,0,1,1)
         return layout
 
+    def showNewCashTrade(self):
+        from guis.panel.panel_newcash import NewCash
+        nc = NewCash(self.user.id)
+        if nc.exec_():
+            self.avs.vb.refresh()
+
     def showNewDepoTrade(self):
         from guis.panel.panel_newdepo import NewDepo
-        nd = NewDepo()
+        nd = NewDepo(self.user.id)
         if nd.exec_():
+            self.avs.vb.refresh()
+
+    def showNewIB2EX(self):
+        from guis.panel.panel_newib2ex import NewIB2EX
+        nie = NewIB2EX(self.sysdate, self.user.id)
+        if nie.exec_():
             self.avs.vb.refresh()
 
     def showNewSub(self):

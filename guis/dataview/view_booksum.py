@@ -7,16 +7,17 @@ import datetime
 class PositionView(ViewBase):
     def __init__(self, sysdate, parent=None):
         ViewBase.__init__(self,
-            query='SELECT b.NAME_CN, '
-                't.INST_CODE, '
-                's.NAME, s.SEC_TYPE, s.EXCHANGE, '
-                'SUM(t.AMOUNT), '
-                'SUM(t.AMOUNT*t.PRICE)/SUM(t.AMOUNT), '
-                'SUM(t.AMOUNT*t.PRICE) '
-                'FROM TRADES t '
-                'LEFT OUTER JOIN BOOKS b ON b.ID=t.BOOK '
-                'LEFT OUTER JOIN SECINFO s ON s.SEC_CODE=t.INST_CODE '
-                """WHERE t.TRADE_DATETIME<='%s'""" % datetime.datetime(sysdate.year, sysdate.month, sysdate.day, 23, 59, 59),
+            query=''.join(['SELECT b.NAME_CN, ',
+                't.INST_CODE, ',
+                's.SEC_NAME, s.SEC_TYPE, s.EXCHANGE, ',
+                'SUM(t.AMOUNT), ',
+                'SUM(t.AMOUNT*t.PRICE)/SUM(t.AMOUNT), ',
+                'SUM(t.AMOUNT*t.PRICE) ',
+                'FROM TRADES t ',
+                'LEFT OUTER JOIN BOOKS b ON b.ID=t.BOOK ',
+                'LEFT OUTER JOIN SECINFO s ON s.SEC_CODE=t.INST_CODE ',
+                """WHERE t.TRADE_DATETIME<='%s' """ % datetime.datetime(sysdate.year, sysdate.month, sysdate.day, 23, 59, 59),
+                'GROUP BY t.INST_CODE ']),
             header=[u'账簿',  # 0
                     u'代码',  # 1
                     u'名称',  # 2

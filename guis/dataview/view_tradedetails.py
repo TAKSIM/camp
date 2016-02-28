@@ -11,7 +11,7 @@ class TradeView(ViewBase):
                                 'b.NAME_CN, '
                                 'u.NAME, '
                                 't.INST_CODE, '
-                                's.NAME, s.SEC_TYPE, s.EXCHANGE, '
+                                's.SEC_NAME, s.SEC_TYPE, s.EXCHANGE, '
                                 't.AMOUNT, '
                                 't.PRICE, '
                                 't.REF_YIELD, '

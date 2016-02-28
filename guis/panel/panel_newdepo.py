@@ -47,11 +47,13 @@ class NewDepo(PanelBase):
         self.total.setReadOnly(True)
         self.total.setValidator(QtGui.QDoubleValidator())
         layout.addWidget(self.total, 6, 1, 1, 1)
-        layout.addWidget(QtGui.QLabel(u'备注'), 7, 0, 1, 1)
+        layout.addWidget(QtGui.QLabel(u'交易对手'), 7, 0, 1, 1)
         self.comment = QtGui.QLineEdit()
         layout.addWidget(self.comment, 7, 1, 1, 1)
-        layout.addWidget(self.ok, 8, 0, 1, 1)
-        layout.addWidget(self.cancel, 8, 1, 1, 1)
+        btnLayout = QtGui.QHBoxLayout()
+        btnLayout.addWidget(self.ok)
+        btnLayout.addWidget(self.cancel)
+        layout.addLayout(btnLayout, 8, 0, 1, 2)
         self.setLayout(layout)
 
     def toDB(self):
@@ -73,7 +75,7 @@ class NewDepo(PanelBase):
                 startDate = self.tradeDateTime.date().toPyDate()
                 endDate = self.expdate.date().toPyDate()
                 if endDate > startDate:
-                    self.total.setText('{:,}'.format((endDate-startDate).days/360.0*rtn/100.0*amount))
+                    self.total.setText('{:,.2f}'.format((endDate-startDate).days/360.0*rtn/100.0*amount))
 
     def check_validity(self, raiseWarning=False):
         if self.expdate.date().toPyDate() <= self.tradeDateTime.date().toPyDate():
