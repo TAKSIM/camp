@@ -48,7 +48,7 @@ class NewTrade(PanelBase):
         else:
             gotinfo = False
             infolist = ['sec_name', 'sec_type', 'exch_city']
-            result = w.wss(c, infolist, 'tradeDate={0}'.format(format(self.sysdate, '%Y%m%d')))
+            result = w.wss(unicode(c), infolist, 'tradeDate={0}'.format(format(self.sysdate, '%Y%m%d')))
             if result:
                 if result.ErrorCode == 0:
                     self.secname.setText(result.Data[0][0])
