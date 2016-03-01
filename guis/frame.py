@@ -97,7 +97,8 @@ class Desktop(QtGui.QMainWindow):
         self.avs =PositionViewSet(self.td)
         gbTrade = QtGui.QGroupBox(u'交易')
         tradeLayout = QtGui.QHBoxLayout()
-        self.btnTrade = QtGui.QPushButton(u'债券/货基')
+        self.btnTrade = QtGui.QPushButton(u'债券/股票/货基')
+        self.btnTrade.clicked.connect(self.showNewTrade)
         self.btnTradeCash = QtGui.QPushButton(u'现金流调整')
         self.btnTradeCash.clicked.connect(self.showNewCashTrade)
         self.btnTradeIBEX = QtGui.QPushButton(u'银证转账')
@@ -210,8 +211,14 @@ class Desktop(QtGui.QMainWindow):
         ax.set(ylabel="Maturity Date", title='Liability Overview')
         sns.despine(left=True, bottom=True)
 
-        layout.addWidget(w,0,0,1,1)
+        layout.addWidget(w, 0, 0, 1, 1)
         return layout
+
+    def showNewTrade(self):
+        from guis.panel.panel_newtrd import NewTrade
+        nt = NewTrade(self.user.id, self.sysdate.date().toPyDate(), self.secinfo)
+        if nt.exec_():
+            self.avs.vb.refresh()
 
     def showNewCashTrade(self):
         from guis.panel.panel_newcash import NewCash
@@ -271,6 +278,13 @@ class Desktop(QtGui.QMainWindow):
         self.loadBooks()
         self.loadDeals()
         self.loadHolidays()
+        self.loadSecInfo()
+
+    def loadSecInfo(self):
+        self.secinfo = {}
+        q = QtSql.QSqlQuery('SELECT SEC_CODE, SEC_NAME, SEC_TYPE, EXCHANGE FROM SECINFO')
+        while q.next():
+            self.secinfo[q.value(0).toString()] = (q.value(1).toString(), q.value(2).toString(), q.value(3).toString())
 
     def loadBooks(self):
         self.books = []
