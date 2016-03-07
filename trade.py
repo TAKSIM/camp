@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import hashlib
 from PyQt4 import QtSql, QtCore
+from WindPy import w
 
 
 class Trade(object):
@@ -118,6 +119,17 @@ class DepoTrade(Trade):
         ct.toDB()
 
 
+class BondTrade(Trade):
+    def __init__(self, book, trader, tradeDateTime, settleDate, instCode, amount, price, refYield, collateralized = False, refTrade = '', settledBy = '', comment = ''):
+        super(BondTrade, self).__init__(book, trader, tradeDateTime, settleDate, instCode, amount, price, refYield=refYield, collateralized=collateralized, refTrade=refTrade, settledBy=settledBy, comment=comment)
+
+    def value(self, asOfDate):
+        result = w.wss(self.instCode, ['yield_cnbd'], 'tradeDate={0}'.format(format(asOfDate,'%Y%m%d')), 'credibility=1')
+        if result.ErrorCode == 0:
+            v = result.Data[0][0]
+            return v
+        else:
+            return None
 
 
 

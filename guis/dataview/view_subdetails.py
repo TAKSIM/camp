@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from PyQt4 import QtGui, QtSql, QtCore
-from view_base import ViewBase, ViewBaseSet, NumberDelegate, DateDelegate, ProgressBarDelegate
+from view_base import ViewBase, ViewBaseSet, NumberDelegate, DateDelegate, ProgressBarDelegate, RowHighlighDelegate
 from guis.panel.panel_newsub import ConfirmSub
 
 

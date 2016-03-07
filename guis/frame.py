@@ -16,6 +16,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import ctypes
 from settings import ColorWhite, ColorHighlightText
+from utils import DateCalculator
 ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID('myappid')
 
 
@@ -216,7 +217,7 @@ class Desktop(QtGui.QMainWindow):
 
     def showNewTrade(self):
         from guis.panel.panel_newtrd import NewTrade
-        nt = NewTrade(self.user.id, self.sysdate.date().toPyDate(), self.secinfo)
+        nt = NewTrade(self.user.id, self.sysdate.date().toPyDate(), self.secinfo, self.datecalc)
         if nt.exec_():
             self.avs.vb.refresh()
 
@@ -316,6 +317,7 @@ class Desktop(QtGui.QMainWindow):
         q.exec_(u"'SELECT HOLDATE FROM HOLIDAYS WHERE HOLSTATUS='工作'")
         while q.next():
             self.workdays.append(q.value(0).toDate().toPyDate())
+        self.datecalc = DateCalculator(self.workdays, self.hols)
 
     def createMenu(self):
         self.mb = self.menuBar()

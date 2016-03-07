@@ -8,11 +8,10 @@ class PanelBase(QtGui.QDialog):
         super(PanelBase, self).__init__(parent)
         self.setWindowIcon(QtGui.QIcon('icons/tent.png'))
         self.viewOnly = viewOnly
-        if not self.viewOnly:
-            self.ok = QtGui.QPushButton(u'确定')
-            self.ok.clicked.connect(self.commit)
-            self.cancel = QtGui.QPushButton(u'取消')
-            self.cancel.clicked.connect(self.close)
+        self.ok = QtGui.QPushButton(u'确定')
+        self.ok.clicked.connect(self.commit)
+        self.cancel = QtGui.QPushButton(u'取消')
+        self.cancel.clicked.connect(self.close)
 
     def check_validity(self, raiseWarning=False):
         return True

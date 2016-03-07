@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from PyQt4 import QtGui, QtSql, QtCore
 import xlsxwriter
+from guis.settings import ColorHighlightText
 
 
 class NumberDelegate(QtGui.QStyledItemDelegate):
@@ -51,6 +52,28 @@ class ProgressBarDelegate(QtGui.QStyledItemDelegate):
         opts.textVisible = True
         opts.progress = int(item_str)
         QtGui.QApplication.style().drawControl(QtGui.QStyle.CE_ProgressBar, opts, painter)
+
+
+class RowHighlighDelegate(QtGui.QStyledItemDelegate):
+    def __init__(self, parent=None, color=ColorHighlightText):
+        super(RowHighlighDelegate, self).__init__(parent=parent)
+        self.color = color
+
+    def initStyleOption(self, option, index):
+        super(RowHighlighDelegate, self).initStyleOption(option, index)
+        option.backgroundBrush = self.color
+
+
+class QueryModelBase(QtSql.QSqlQueryModel):
+    def __init__(self, parent=None):
+        super(QueryModelBase, self).__init__(parent=parent)
+
+    def data(self, index, int_role=None):
+        row = index.row()
+        return self.calculateColorForRow(row) or super(QueryModelBase, self).data(index, int_role)
+
+    def calculateColorForRow(self, row):
+        return None
 
 
 class ViewBase(QtGui.QTableView):
