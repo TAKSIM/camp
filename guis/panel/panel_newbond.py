@@ -198,7 +198,7 @@ class NewBond(PanelBase):
 
         bt = BondTrade(self.books.currentIndex(),
                        self.user,
-                       self.tradeDate.dateTime().toPyDateTime(),
+                       self.tradeDateTime.dateTime().toPyDateTime(),
                        self.settleDate.date().toPyDate(),
                        self.code.text(),
                        amount,
