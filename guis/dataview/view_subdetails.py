@@ -1,7 +1,24 @@
 # -*- coding: utf-8 -*-
 from PyQt4 import QtGui, QtSql, QtCore
-from view_base import ViewBase, ViewBaseSet, NumberDelegate, DateDelegate, ProgressBarDelegate, RowHighlighDelegate
+from view_base import ViewBase, ViewBaseSet, NumberDelegate, DateDelegate, ProgressBarDelegate, ColorHighlightText
 from guis.panel.panel_newsub import ConfirmSub
+
+
+class SubDataModel(QtSql.QSqlQueryModel):
+    def __init__(self, parent=None):
+        super(SubDataModel, self).__init__(parent=parent)
+
+    def data(self, index, int_role=None):
+        if int_role == QtCore.Qt.TextAlignmentRole and index.column() in [2, 7, 8, 10]:
+            return QtCore.Qt.AlignRight
+        elif int_role == QtCore.Qt.BackgroundColorRole:
+            if self.data(self.index(index.row(), 12), QtCore.Qt.DisplayRole).toString().isEmpty():  # if settle date is not confirmed
+                return ColorHighlightText
+
+        return super(SubDataModel, self).data(index, int_role)
+
+    def setData(self, index, value, int_role=None):
+        return super(SubDataModel, self).setData(index, value, int_role)
 
 
 class LiabilityView(ViewBase):
@@ -40,8 +57,9 @@ class LiabilityView(ViewBase):
                       ],
             tablename=u'申购信息',
             datatypes='ddfssssffdisd',
-            menu    = True,
-            parent  = parent)
+            datamodel=SubDataModel(),
+            menu=True,
+            parent=parent)
         self.sysdate = sysdate
         self.user = user
 

@@ -1,8 +1,22 @@
 # -*- coding: utf-8 -*-
-from view_base import ViewBase, ViewBaseSet, NumberDelegate, DateDelegate, DateTimeDelegate
+from view_base import ViewBase, ViewBaseSet, NumberDelegate, DateDelegate, DateTimeDelegate, QueryModelBase
 from PyQt4 import QtCore, QtGui, QtSql
 import datetime
 from trade import Trade
+
+
+class TradeDataModel(QtSql.QSqlQueryModel):
+    def __init__(self, parent=None):
+        super(TradeDataModel, self).__init__(parent=parent)
+
+    def data(self, index, int_role=None):
+        if int_role == QtCore.Qt.TextAlignmentRole and index.column() in [7, 8, 9]:
+            return QtCore.Qt.AlignRight
+        else:
+            return super(TradeDataModel, self).data(index, int_role)
+
+    def setData(self, index, value, int_role=None):
+        return super(TradeDataModel, self).setData(index, value, int_role)
 
 
 class TradeView(ViewBase):
@@ -37,6 +51,7 @@ class TradeView(ViewBase):
                                   u'交易编码'], # 12
                           tablename=u'交易明细',
                           datatypes='tssssssfffdss',
+                          datamodel=TradeDataModel(),
                           menu=True,
                           parent=parent)
         self.sysdate = sysdate

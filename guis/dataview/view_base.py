@@ -77,7 +77,7 @@ class QueryModelBase(QtSql.QSqlQueryModel):
 
 
 class ViewBase(QtGui.QTableView):
-    def __init__(self, query, header, tablename, datatypes, menu=False, parent=None):
+    def __init__(self, query, header, tablename, datatypes, datamodel=None, menu=False, parent=None):
         # data types: s: string, d: date, t: datetime, f: float, i: int
         super(ViewBase, self).__init__(parent)
         self.query = query
@@ -85,7 +85,7 @@ class ViewBase(QtGui.QTableView):
         self.tablename = tablename
         self.datatypes = datatypes
 
-        self.dataModel = QtSql.QSqlQueryModel()
+        self.dataModel = datamodel or QtSql.QSqlQueryModel()
         self.dataModel.setQuery(self.query)
         for i, h in enumerate(self.header):
             self.dataModel.setHeaderData(i, QtCore.Qt.Horizontal, h)

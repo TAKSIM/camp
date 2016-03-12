@@ -1,7 +1,21 @@
 # -*- coding: utf-8 -*-
 from view_base import ViewBase, ViewBaseSet, NumberDelegate
-from PyQt4 import QtGui
+from PyQt4 import QtGui, QtSql, QtCore
 import datetime
+
+
+class PositionDataModel(QtSql.QSqlQueryModel):
+    def __init__(self, parent=None):
+        super(PositionDataModel, self).__init__(parent=parent)
+
+    def data(self, index, int_role=None):
+        if int_role == QtCore.Qt.TextAlignmentRole and index.column() in [5, 6, 7]:
+            return QtCore.Qt.AlignRight
+        else:
+            return super(PositionDataModel, self).data(index, int_role)
+
+    def setData(self, index, value, int_role=None):
+        return super(PositionDataModel, self).setData(index, value, int_role)
 
 
 class PositionView(ViewBase):
@@ -28,6 +42,7 @@ class PositionView(ViewBase):
                     u'总成本'],  # 7
             tablename=u'持仓',
             datatypes='sssssfff',
+            datamodel=PositionDataModel(),
             menu=True,
             parent=parent
         )
