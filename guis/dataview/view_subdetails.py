@@ -10,7 +10,7 @@ class SubDataModel(QtSql.QSqlQueryModel):
 
     def data(self, index, int_role=None):
         if int_role == QtCore.Qt.TextAlignmentRole and index.column() in [2, 7, 8, 10]:
-            return QtCore.Qt.AlignRight
+            return QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter
         elif int_role == QtCore.Qt.BackgroundColorRole:
             if self.data(self.index(index.row(), 12), QtCore.Qt.DisplayRole).toString().isEmpty():  # if settle date is not confirmed
                 return ColorHighlightText

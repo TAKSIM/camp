@@ -10,7 +10,7 @@ class PositionDataModel(QtSql.QSqlQueryModel):
 
     def data(self, index, int_role=None):
         if int_role == QtCore.Qt.TextAlignmentRole and index.column() in [5, 6, 7]:
-            return QtCore.Qt.AlignRight
+            return QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter
         else:
             return super(PositionDataModel, self).data(index, int_role)
 

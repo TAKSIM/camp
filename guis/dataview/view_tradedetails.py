@@ -11,7 +11,7 @@ class TradeDataModel(QtSql.QSqlQueryModel):
 
     def data(self, index, int_role=None):
         if int_role == QtCore.Qt.TextAlignmentRole and index.column() in [7, 8, 9]:
-            return QtCore.Qt.AlignRight
+            return QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter
         else:
             return super(TradeDataModel, self).data(index, int_role)
 
@@ -57,7 +57,6 @@ class TradeView(ViewBase):
         self.sysdate = sysdate
         self.user = user
 
-        #self.verticalHeader().setDefaultSectionSize(15)
         self.sortByColumn(0, QtCore.Qt.DescendingOrder)
         nfAmt = NumberDelegate(parent=self, withComma=True, numDigits=0)
         nfPct = NumberDelegate(parent=self, withComma=False, numDigits=2)
