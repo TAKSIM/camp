@@ -65,7 +65,7 @@ class TradeView(ViewBase):
 
         self.setItemDelegateForColumn(0, dtf)
         self.setItemDelegateForColumn(7, nfAmt)
-        self.setItemDelegateForColumn(8, nfAmt)
+        self.setItemDelegateForColumn(8, nfPct)
         self.setItemDelegateForColumn(9, nfPct)
         self.setItemDelegateForColumn(10, df)
 

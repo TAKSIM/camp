@@ -24,7 +24,7 @@ class Trade(object):
             self.tradeID = kwargs.get('tradeID', None)
             if not self.tradeID:
                 m = hashlib.sha1()
-                m.update(str(self.trader) + str(self.tradeDateTime) + unicode(self.comment).encode('GB2312') + str(self.amount) + str(self.refTrade) + str(self.price) + str(self.refYield) + str(self.maturityDate))
+                m.update(str(self.trader) + str(self.tradeDateTime) + unicode(self.comment).encode('GBK') + str(self.amount) + str(self.refTrade) + str(self.price) + str(self.refYield) + str(self.maturityDate))
                 self.tradeID = m.hexdigest()
         elif len(args) == 1:
             self.tradeID = args[0]
@@ -55,7 +55,7 @@ class Trade(object):
             refTrade = str(q.value(9).toString())
             refYield = q.value(10).toDouble()[0]
             settledBy = str(q.value(11).toString())
-            comment = str(q.value(12).toString())
+            comment = unicode(q.value(12).toPyObject())
             md = q.value(13).toDate()
             maturityDate = md and md.toPyDate() or None
             q = QtSql.QSqlQuery("""SELECT SEC_TYPE FROM SECINFO WHERE SEC_CODE='%s'""" % instCode)
@@ -66,6 +66,9 @@ class Trade(object):
                     return obj
                 elif secname == QtCore.QString(u'存款'):
                     obj = DepoTrade(book, trader, tradeDateTime, amount, refYield, maturityDate, dcc='Act/360', settledBy=settledBy, comment=comment, tradeID=tradeID)
+                    return obj
+                elif secname == QtCore.QString(u'短期融资券'):
+                    obj = BondTrade(book, trader, tradeDateTime, settleDate, instCode, amount, price, refYield, collateralized=collateralized, refTrade=refTrade, settledBy=settledBy, comment=comment, tradeID=tradeID)
                     return obj
                 else:
                     raise NotImplementedError('Unknown trade type')
@@ -120,8 +123,8 @@ class DepoTrade(Trade):
 
 
 class BondTrade(Trade):
-    def __init__(self, book, trader, tradeDateTime, settleDate, instCode, amount, price, refYield, collateralized = False, refTrade = '', settledBy = '', comment = ''):
-        super(BondTrade, self).__init__(book, trader, tradeDateTime, settleDate, instCode, amount, price, refYield=refYield, collateralized=collateralized, refTrade=refTrade, settledBy=settledBy, comment=comment)
+    def __init__(self, book, trader, tradeDateTime, settleDate, instCode, amount, price, refYield, collateralized = False, refTrade = '', settledBy = '', comment = '', tradeID=None):
+        super(BondTrade, self).__init__(book, trader, tradeDateTime, settleDate, instCode, amount, price, refYield=refYield, collateralized=collateralized, refTrade=refTrade, settledBy=settledBy, comment=comment, tradeID=tradeID)
 
     def value(self, asOfDate):
         result = w.wss(self.instCode, ['yield_cnbd'], 'tradeDate={0}'.format(format(asOfDate,'%Y%m%d')), 'credibility=1')
@@ -130,6 +133,21 @@ class BondTrade(Trade):
             return v
         else:
             return None
+
+    def settle(self, trader):
+        q = QtSql.QSqlQuery()
+        try:
+            query = """UPDATE TRADES SET SETTLED_BY='%s' WHERE TRADE_ID='%s'""" % (trader, self.tradeID)
+            q.exec_(query)
+            #print query
+            QtSql.QSqlDatabase().commit()
+            self.settledBy = trader
+
+            ct = CashTrade(self.book, self.trader, self.tradeDateTime, -self.amount*self.price, self.instCode[-2:]=='IB' and 'CASH_IB' or 'CASH_EX', refTrade=self.tradeID, comment=u'交割现金流')
+            ct.toDB()
+        except Exception, e:
+            print e.message
+            QtSql.QSqlDatabase().rollback()
 
 
 
