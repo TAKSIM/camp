@@ -262,7 +262,7 @@ class ConfirmSub(PanelBase):
             q = QtSql.QSqlQuery("""SELECT AMOUNT FROM LIABILITY WHERE SUB_CODE='%s'""" % self.subcode)
             while q.next():
                 amount = q.value(0).toDouble()[0]
-            ct = CashTrade(book=0, trader=self.user.id, tradeDateTime=datetime.datetime.fromordinal(confdate.toordinal()), amount=amount, settledBy=self.user.id, comment=u'申购%s' % self.subcode)
+            ct = CashTrade(book=0, trader=self.user.id, tradeDateTime=datetime.datetime.fromordinal(confdate.toordinal()), amount=amount, comment=u'申购%s' % self.subcode)
             ct.toDB()
 
         except Exception, e:

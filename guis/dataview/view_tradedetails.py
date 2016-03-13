@@ -57,6 +57,7 @@ class TradeView(ViewBase):
         self.sysdate = sysdate
         self.user = user
 
+        #self.verticalHeader().setDefaultSectionSize(15)
         self.sortByColumn(0, QtCore.Qt.DescendingOrder)
         nfAmt = NumberDelegate(parent=self, withComma=True, numDigits=0)
         nfPct = NumberDelegate(parent=self, withComma=False, numDigits=2)

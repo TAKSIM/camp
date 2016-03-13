@@ -97,7 +97,7 @@ class ViewBase(QtGui.QTableView):
         self.setModel(self.proxyModel)
         self.verticalHeader().hide()
         self.resizeColumnsToContents()
-        self.resizeRowsToContents()
+        #self.resizeRowsToContents()
         self.setSortingEnabled(True)
         self.setAlternatingRowColors(True)
         self.setSelectionBehavior(QtGui.QTableView.SelectRows)
