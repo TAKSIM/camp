@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
-from view_base import ViewBase, ViewBaseSet, NumberDelegate, DateDelegate, DateTimeDelegate, QueryModelBase
+from view_base import ViewBase, ViewBaseSet, NumberDelegate, DateDelegate, DateTimeDelegate
 from PyQt4 import QtCore, QtGui, QtSql
 import datetime
 from trade import Trade
+from settings import ColorHighlightText
 
 
 class TradeDataModel(QtSql.QSqlQueryModel):
@@ -12,6 +13,9 @@ class TradeDataModel(QtSql.QSqlQueryModel):
     def data(self, index, int_role=None):
         if int_role == QtCore.Qt.TextAlignmentRole and index.column() in [7, 8, 9]:
             return QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter
+        elif int_role == QtCore.Qt.BackgroundColorRole:
+            if self.data(self.index(index.row(), 11), QtCore.Qt.DisplayRole).toString().isEmpty():  # if settle date is not confirmed
+                return ColorHighlightText
         else:
             return super(TradeDataModel, self).data(index, int_role)
 
@@ -31,6 +35,7 @@ class TradeView(ViewBase):
                                 't.PRICE, '
                                 't.REF_YIELD, '
                                 't.SETTLE_DATE, '
+                                't.SETTLED_BY, '
                                 't.COMMENT, '
                                 't.TRADE_ID '
                                 'FROM TRADES t '
@@ -47,8 +52,9 @@ class TradeView(ViewBase):
                                   u'成交全价', # 8
                                   u'收益率', # 9
                                   u'交割日', # 10
-                                  u'备注', # 11
-                                  u'交易编码'], # 12
+                                  u'交割确认',  # 11
+                                  u'备注', # 12
+                                  u'交易编码'], # 13
                           tablename=u'交易明细',
                           datatypes='tssssssfffdss',
                           datamodel=TradeDataModel(),
