@@ -438,29 +438,32 @@ class TreeControl(QtGui.QTreeWidget):
         self.setFixedWidth(120)
 
     def addItems(self, parent):
-        assets_item = self.addParent(parent, u'资产' )
-        self.addChild(assets_item, u'账户总览')
-        self.addChild(assets_item, u'交易明细')
-        self.addChild(assets_item, u'账簿信息')
+        assets_item = self.addParent(parent, u'资产', QtGui.QIcon('icons/asset.png'))
+        self.addChild(assets_item, u'账户总览', QtGui.QIcon('icons/items.png'))
+        self.addChild(assets_item, u'交易明细', QtGui.QIcon('icons/details.png'))
+        self.addChild(assets_item, u'账簿信息', QtGui.QIcon('icons/info.png'))
 
-        liability_item = self.addParent(parent, u'负债')
-        self.addChild(liability_item, u'负债总览')
-        self.addChild(liability_item, u'申购明细')
+        liability_item = self.addParent(parent, u'负债', QtGui.QIcon('icons/bank.png'))
+        self.addChild(liability_item, u'负债总览', QtGui.QIcon('icons/items.png'))
+        self.addChild(liability_item, u'申购明细', QtGui.QIcon('icons/details.png'))
 
-        credit_item = self.addParent(parent, u'信用研究')
+        credit_item = self.addParent(parent, u'信用研究', QtGui.QIcon('icons/research.png'))
         self.addChild(credit_item, u'债券池')
 
-        risk_item = self.addParent(parent, u'风险控制')
+        risk_item = self.addParent(parent, u'风险控制', QtGui.QIcon('icons/risk.png'))
 
-
-    def addParent(self, parent, title):
+    def addParent(self, parent, title, icon=None):
         item = QtGui.QTreeWidgetItem(parent, [title])
+        if icon:
+            item.setIcon(0, icon)
         item.setChildIndicatorPolicy(QtGui.QTreeWidgetItem.ShowIndicator)
         item.setExpanded(True)
         return item
 
-    def addChild(self, parent, title):
+    def addChild(self, parent, title, icon=None):
         item = QtGui.QTreeWidgetItem(parent, [title])
+        if icon:
+            item.setIcon(0, icon)
         return item
 
     def handleClicked(self, item):
