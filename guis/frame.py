@@ -2,6 +2,7 @@
 from login import LoginPage
 import datetime
 import env
+import sys
 from inst.lifecycle import Book, Deal
 from PyQt4 import Qt, QtGui, QtCore, QtSql
 from dataview.view_subdetails import LiabilityViewSet

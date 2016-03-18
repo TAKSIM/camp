@@ -1,0 +1,1 @@
+python D:\code\camp\main.py
