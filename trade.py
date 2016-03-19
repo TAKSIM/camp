@@ -2,7 +2,7 @@
 import hashlib
 from PyQt4 import QtSql, QtCore
 from WindPy import w
-
+import datetime
 
 class Trade(object):
     def __init__(self, *args, **kwargs):
@@ -67,7 +67,7 @@ class Trade(object):
                 elif secname == QtCore.QString(u'存款'):
                     obj = DepoTrade(book, trader, tradeDateTime, amount, refYield, maturityDate, dcc='Act/360', settledBy=settledBy, comment=comment, tradeID=tradeID)
                     return obj
-                elif secname == QtCore.QString(u'短期融资券'):
+                elif secname in [QtCore.QString(u'短期融资券'), QtCore.QString(u'企债')]:
                     obj = BondTrade(book, trader, tradeDateTime, settleDate, instCode, amount, price, refYield, collateralized=collateralized, refTrade=refTrade, settledBy=settledBy, comment=comment, tradeID=tradeID)
                     return obj
                 else:
@@ -143,7 +143,7 @@ class BondTrade(Trade):
             QtSql.QSqlDatabase().commit()
             self.settledBy = trader
 
-            ct = CashTrade(self.book, self.trader, self.tradeDateTime, -self.amount*self.price, self.instCode[-2:]=='IB' and 'CASH_IB' or 'CASH_EX', refTrade=self.tradeID, comment=u'交割现金流')
+            ct = CashTrade(self.book, self.trader, datetime.datetime.fromordinal(self.settleDate.toordinal()), -self.amount*self.price, self.instCode[-2:]=='IB' and 'CASH_IB' or 'CASH_EX', refTrade=self.tradeID, comment=u'交割现金流')
             ct.toDB()
         except Exception, e:
             print e.message

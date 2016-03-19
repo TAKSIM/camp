@@ -99,7 +99,7 @@ class Desktop(QtGui.QMainWindow):
         self.avs =PositionViewSet(self.td)
         gbTrade = QtGui.QGroupBox(u'交易')
         tradeLayout = QtGui.QHBoxLayout()
-        self.btnTrade = QtGui.QPushButton(u'债券/股票/货基')
+        self.btnTrade = QtGui.QPushButton(u'债券/股票/货基/回购')
         self.btnTrade.clicked.connect(self.showNewTrade)
         self.btnTradeCash = QtGui.QPushButton(u'现金流调整')
         self.btnTradeCash.clicked.connect(self.showNewCashTrade)
@@ -275,6 +275,7 @@ class Desktop(QtGui.QMainWindow):
         self.db.setPassword('wehea1984')
         if not self.db.open():
             raise Exception(u'无法连接数据库')
+        QtSql.QSqlDatabase().setConnectOptions('MYSQL_OPT_RECONNECT=1')
 
     def initFromDB(self):
         self.loadBooks()

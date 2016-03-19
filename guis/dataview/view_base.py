@@ -130,6 +130,8 @@ class ViewBase(QtGui.QTableView):
 
     def refresh(self):
         #self.dataModel.query().exec_()
+        if not QtSql.QSqlDatabase().isOpen():
+            print 'Lost Connection!!!!'
         self.dataModel.setQuery(self.query)
 
     def exportToExcel(self):

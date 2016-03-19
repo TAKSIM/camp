@@ -84,7 +84,7 @@ class TradeView(ViewBase):
 
     def confirmSettle(self):
         rowIndex = self.currentIndex().row()
-        tradeID = self.model().index(rowIndex, 12).data().toString()
+        tradeID = self.model().index(rowIndex, 13).data().toString()
         trd = Trade.fromDB(tradeID)
         if trd:
             trd.settle(self.user.id)
@@ -93,7 +93,7 @@ class TradeView(ViewBase):
 
     def deleteTrade(self):
         rowIndex = self.currentIndex().row()
-        tradeID = self.model().index(rowIndex, 12).data().toString()
+        tradeID = self.model().index(rowIndex, 13).data().toString()
         q = QtSql.QSqlQuery()
         try:
             query = """DELETE FROM TRADES WHERE TRADE_ID='%s'""" % tradeID
