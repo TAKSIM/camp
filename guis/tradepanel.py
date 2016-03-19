@@ -8,7 +8,7 @@ class DepoPanel(QtGui.QDialog):
     def __init__(self, user, books, parent = None):
         QtGui.QDialog.__init__(self, parent)
         self.setWindowTitle(u'同业存款')
-        self.setWindowIcon(QtGui.QIcon('icons/tent.png'))
+        self.setWindowIcon(QtGui.QIcon('guis/icons/tent.png'))
         self.setFixedSize(200,250)
         self.user = user
 
@@ -65,7 +65,7 @@ class MmfPanel(QtGui.QDialog):
     def __init__(self, books, parent=None):
         QtGui.QDialog.__init__(self, parent)
         self.setWindowTitle(u'货币基金')
-        self.setWindowIcon(QtGui.QIcon('icons/tent.png'))
+        self.setWindowIcon(QtGui.QIcon('guis/icons/tent.png'))
         self.setFixedSize(200,250)
 
         layout = QtGui.QGridLayout()
@@ -111,7 +111,7 @@ class BondPanel(QtGui.QDialog):
     def __init__(self, books, parent=None):
         QtGui.QDialog.__init__(self, parent)
         self.setWindowTitle(u'债券现券')
-        self.setWindowIcon(QtGui.QIcon('icons/tent.png'))
+        self.setWindowIcon(QtGui.QIcon('guis/icons/tent.png'))
         self.setFixedSize(800,300)
 
         layout = QtGui.QHBoxLayout()
@@ -280,7 +280,7 @@ class HolidayPanel(QtGui.QDialog):
     def __init__(self, parent=None):
         QtGui.QDialog.__init__(self, parent)
         self.setWindowTitle(u'假期设置')
-        self.setWindowIcon(QtGui.QIcon('icons/tent.png'))
+        self.setWindowIcon(QtGui.QIcon('guis/icons/tent.png'))
         self.setMaximumWidth(200)
         layout = QtGui.QVBoxLayout()
         self.holData = QtSql.QSqlTableModel()
@@ -331,7 +331,7 @@ class HolidayPanel(QtGui.QDialog):
 class NewHolPanel(QtGui.QDialog):
     def __init__(self, parent=None):
         QtGui.QDialog.__init__(self, parent)
-        self.setWindowIcon(QtGui.QIcon('icons/tent.png'))
+        self.setWindowIcon(QtGui.QIcon('guis/icons/tent.png'))
         self.setWindowTitle(u'新增假期')
         layout = QtGui.QGridLayout()
         layout.addWidget(QtGui.QLabel(u'日期'),0,0,1,1)

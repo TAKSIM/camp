@@ -337,10 +337,10 @@ class Desktop(QtGui.QMainWindow):
         m3.addAction(self.aboutAction)
 
     def createAction(self):
-        self.showLogAction = QtGui.QAction(QtGui.QIcon('icons/info.png'), u'显示日志', self, triggered=self.log.show)
-        self.exitAction = QtGui.QAction(QtGui.QIcon(r'icons\exit.png'), u'退出', self, triggered=QtGui.qApp.quit)
-        self.refreshAction = QtGui.QAction(QtGui.QIcon(r'icons\refresh.png'), u'刷新', self, triggered=self.refresh, shortcut='F5')
-        self.holAction = QtGui.QAction(QtGui.QIcon(r'icons\settings.png'), u'假期设置', self, shortcut='Ctrl+H', triggered=self.showHolidayPanel)
+        self.showLogAction = QtGui.QAction(QtGui.QIcon('guis/icons/info.png'), u'显示日志', self, triggered=self.log.show)
+        self.exitAction = QtGui.QAction(QtGui.QIcon('guis/icons/exit.png'), u'退出', self, triggered=QtGui.qApp.quit)
+        self.refreshAction = QtGui.QAction(QtGui.QIcon('guis/icons/refresh.png'), u'刷新', self, triggered=self.refresh, shortcut='F5')
+        self.holAction = QtGui.QAction(QtGui.QIcon('guis/icons/settings.png'), u'假期设置', self, shortcut='Ctrl+H', triggered=self.showHolidayPanel)
 
         # self.tradeBond = QtGui.QAction(u'债券', self, shortcut='Ctrl+B', triggered=self.showBondPanel)
         # self.tradeDepo = QtGui.QAction(u'同业存款', self, shortcut='Ctrl+D', triggered=self.showDepoPanel)
@@ -409,7 +409,7 @@ class Desktop(QtGui.QMainWindow):
 
     def closeEvent(self, event):
         q = QtGui.QMessageBox(QtGui.QMessageBox.Question, u'关闭退出', u'确认关闭退出')
-        q.setWindowIcon(QtGui.QIcon(r'icons/tent.png'))
+        q.setWindowIcon(QtGui.QIcon('guis/icons/tent.png'))
         q.setStandardButtons(QtGui.QMessageBox.Yes | QtGui.QMessageBox.No)
         q.setButtonText(QtGui.QMessageBox.Yes, u'确定')
         q.setButtonText(QtGui.QMessageBox.No, u'取消')
@@ -439,19 +439,19 @@ class TreeControl(QtGui.QTreeWidget):
         self.setFixedWidth(120)
 
     def addItems(self, parent):
-        assets_item = self.addParent(parent, u'资产', QtGui.QIcon('icons/asset.png'))
-        self.addChild(assets_item, u'账户总览', QtGui.QIcon('icons/checklist.png'))
-        self.addChild(assets_item, u'交易明细', QtGui.QIcon('icons/details.png'))
-        self.addChild(assets_item, u'账簿信息', QtGui.QIcon('icons/info.png'))
+        assets_item = self.addParent(parent, u'资产', QtGui.QIcon('guis/icons/asset.png'))
+        self.addChild(assets_item, u'账户总览', QtGui.QIcon('guis/icons/checklist.png'))
+        self.addChild(assets_item, u'交易明细', QtGui.QIcon('guis/icons/details.png'))
+        self.addChild(assets_item, u'账簿信息', QtGui.QIcon('guis/icons/info.png'))
 
-        liability_item = self.addParent(parent, u'负债', QtGui.QIcon('icons/bank.png'))
-        self.addChild(liability_item, u'负债总览', QtGui.QIcon('icons/checklist.png'))
-        self.addChild(liability_item, u'申购明细', QtGui.QIcon('icons/details.png'))
+        liability_item = self.addParent(parent, u'负债', QtGui.QIcon('guis/icons/bank.png'))
+        self.addChild(liability_item, u'负债总览', QtGui.QIcon('guis/icons/checklist.png'))
+        self.addChild(liability_item, u'申购明细', QtGui.QIcon('guis/icons/details.png'))
 
-        credit_item = self.addParent(parent, u'信用研究', QtGui.QIcon('icons/research.png'))
-        self.addChild(credit_item, u'债券池', QtGui.QIcon('icons/items.png'))
+        credit_item = self.addParent(parent, u'信用研究', QtGui.QIcon('guis/icons/research.png'))
+        self.addChild(credit_item, u'债券池', QtGui.QIcon('guis/icons/items.png'))
 
-        risk_item = self.addParent(parent, u'风险控制', QtGui.QIcon('icons/risk.png'))
+        risk_item = self.addParent(parent, u'风险控制', QtGui.QIcon('guis/icons/risk.png'))
 
     def addParent(self, parent, title, icon=None):
         item = QtGui.QTreeWidgetItem(parent, [title])

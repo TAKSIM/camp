@@ -16,7 +16,7 @@ class LogPanel(QtGui.QWidget):
     def __init__(self, parent=None):
         super(LogPanel, self).__init__(parent)
         self.setWindowTitle(u'系统日志')
-        self.setWindowIcon(QtGui.QIcon('icons/info.png'))
+        self.setWindowIcon(QtGui.QIcon('guis/icons/info.png'))
         self.msg = QtGui.QTextEdit()
         layout = QtGui.QVBoxLayout()
         layout.addWidget(self.msg)

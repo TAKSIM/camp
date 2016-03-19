@@ -6,7 +6,7 @@ from guis.settings import ColorWhite, ColorRed
 class PanelBase(QtGui.QDialog):
     def __init__(self, parent=None, viewOnly=False, **kwargs):
         super(PanelBase, self).__init__(parent)
-        self.setWindowIcon(QtGui.QIcon('icons/tent.png'))
+        self.setWindowIcon(QtGui.QIcon('guis/icons/tent.png'))
         self.viewOnly = viewOnly
         self.ok = QtGui.QPushButton(u'确定')
         self.ok.clicked.connect(self.commit)

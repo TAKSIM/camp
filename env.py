@@ -3,7 +3,7 @@ import hashlib
 from PyQt4 import QtSql, QtCore
 from WindPy import *
 
-sysIcon = r'icons\tent.png'
+sysIcon = 'guis/icons/tent.png'
 
 def enum(**enums):
     return type('Enum', (), enums)

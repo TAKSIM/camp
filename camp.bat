@@ -1,1 +1,1 @@
-python D:\code\camp\main.py
+python .\main.py
