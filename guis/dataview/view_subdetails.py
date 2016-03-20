@@ -24,23 +24,6 @@ class SubDataModel(QtSql.QSqlQueryModel):
 class LiabilityView(ViewBase):
     def __init__(self, sysdate, user, parent=None):
         super(LiabilityView, self).__init__(
-            query = 'select d.SUB_DATE, '
-                    'd.EXP_DATE, '
-                    'd.AMOUNT*(1+d.EXP_RETURN*(datediff(d.EXP_DATE, d.SETTLE_DATE)+1)/36500.0), '
-                    'c.TYPE_NAME, '
-                    'd.CLIENT_NAME, '
-                    's.TYPE_NAME, '
-                    'd.SUB_CODE, '
-                    'd.AMOUNT, '
-                    'd.EXP_RETURN, '
-                    'd.SETTLE_DATE, '
-                    'datediff(d.EXP_DATE, d.SETTLE_DATE)+1, '
-                    'd.COMMENT, '
-                    'd.CONFIRM_DATE '
-                    'from liability d '
-                    'left outer join sale_type s on s.ID=d.SALE_TYPE '
-                    'left outer join client_type c on c.id=d.CLIENT_TYPE'
-                    """ WHERE EXP_DATE>='%s'""" % sysdate,
             header = [u'认购日', # 0
                       u'封闭期到期日', # 1
                       u'到期本息', # 2
@@ -58,9 +41,9 @@ class LiabilityView(ViewBase):
             tablename=u'申购信息',
             datatypes='ddfssssffdisd',
             datamodel=SubDataModel(),
+            asOfDate=sysdate,
             menu=True,
             parent=parent)
-        self.sysdate = sysdate
         self.user = user
 
         self.sortByColumn(0, QtCore.Qt.DescendingOrder)
@@ -76,6 +59,25 @@ class LiabilityView(ViewBase):
         self.setItemDelegateForColumn(8, nfPct)
         self.setItemDelegateForColumn(9, df)
         self.setItemDelegateForColumn(12, df)
+
+    def build_query(self):
+        self.query = ''.join([  'select d.SUB_DATE,',
+                                'd.EXP_DATE, ',
+                                'd.AMOUNT*(1+d.EXP_RETURN*(datediff(d.EXP_DATE, d.SETTLE_DATE)+1)/36500.0), ',
+                                'c.TYPE_NAME, ',
+                                'd.CLIENT_NAME, ',
+                                's.TYPE_NAME, ',
+                                'd.SUB_CODE, ',
+                                'd.AMOUNT, ',
+                                'd.EXP_RETURN, ',
+                                'd.SETTLE_DATE, ',
+                                'datediff(d.EXP_DATE, d.SETTLE_DATE)+1, ',
+                                'd.COMMENT, ',
+                                'd.CONFIRM_DATE ',
+                                'from liability d ',
+                                'left outer join sale_type s on s.ID=d.SALE_TYPE ',
+                                'left outer join client_type c on c.id=d.CLIENT_TYPE',
+                                """ WHERE EXP_DATE>='%s'""" % self.asOfDate])
 
     def buildMenu(self):
         self.menu = QtGui.QMenu()

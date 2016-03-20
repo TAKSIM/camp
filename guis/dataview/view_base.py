@@ -77,13 +77,14 @@ class QueryModelBase(QtSql.QSqlQueryModel):
 
 
 class ViewBase(QtGui.QTableView):
-    def __init__(self, query, header, tablename, datatypes, datamodel=None, menu=False, parent=None):
+    def __init__(self, header, tablename, datatypes, asOfDate, datamodel=None, menu=False, parent=None):
         # data types: s: string, d: date, t: datetime, f: float, i: int
         super(ViewBase, self).__init__(parent)
-        self.query = query
         self.header = header
         self.tablename = tablename
         self.datatypes = datatypes
+        self.asOfDate = asOfDate
+        self.build_query()
 
         self.dataModel = datamodel or QtSql.QSqlQueryModel()
         self.dataModel.setQuery(self.query)
@@ -102,11 +103,18 @@ class ViewBase(QtGui.QTableView):
         self.setAlternatingRowColors(True)
         self.setSelectionBehavior(QtGui.QTableView.SelectRows)
 
-
         if menu:
             self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
             self.customContextMenuRequested.connect(self.showRightClickMenu)
             self.buildMenu()
+
+    def date_update(self, newDate):
+        self.asOfDate = newDate
+        self.build_query()
+        self.refresh()
+
+    def build_query(self):
+        raise NotImplementedError()
 
     def convert_to_output(self, vtype, value):
         if vtype=='s':
