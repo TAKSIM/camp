@@ -21,17 +21,6 @@ class PositionDataModel(QtSql.QSqlQueryModel):
 class PositionView(ViewBase):
     def __init__(self, sysdate, parent=None):
         super(PositionView, self).__init__(
-            query=''.join(['SELECT b.NAME_CN, ',
-                't.INST_CODE, ',
-                's.SEC_NAME, s.SEC_TYPE, s.EXCHANGE, ',
-                'SUM(t.AMOUNT), ',
-                'SUM(t.AMOUNT*t.PRICE)/SUM(t.AMOUNT), ',
-                'SUM(t.AMOUNT*t.PRICE) ',
-                'FROM TRADES t ',
-                'LEFT OUTER JOIN BOOKS b ON b.ID=t.BOOK ',
-                'LEFT OUTER JOIN SECINFO s ON s.SEC_CODE=t.INST_CODE ',
-                """WHERE t.TRADE_DATETIME<='%s' """ % datetime.datetime(sysdate.year, sysdate.month, sysdate.day, 23, 59, 59),
-                'GROUP BY t.INST_CODE ']),
             header=[u'账簿',  # 0
                     u'代码',  # 1
                     u'名称',  # 2
@@ -42,11 +31,11 @@ class PositionView(ViewBase):
                     u'总成本'],  # 7
             tablename=u'持仓',
             datatypes='sssssfff',
+            asOfDate=sysdate,
             datamodel=PositionDataModel(),
             menu=True,
             parent=parent
         )
-        self.sysdate = sysdate
         nfAmt = NumberDelegate(parent=self, withComma=True, numDigits=0)
         self.setItemDelegateForColumn(5, nfAmt)
         self.setItemDelegateForColumn(7, nfAmt)
@@ -54,6 +43,18 @@ class PositionView(ViewBase):
     def buildMenu(self):
         self.menu = QtGui.QMenu()
 
+    def build_query(self):
+        self.query=''.join(['SELECT b.NAME_CN, ',
+                't.INST_CODE, ',
+                's.SEC_NAME, s.SEC_TYPE, s.EXCHANGE, ',
+                'SUM(t.AMOUNT), ',
+                'SUM(t.AMOUNT*t.PRICE)/SUM(t.AMOUNT), ',
+                'SUM(t.AMOUNT*t.PRICE) ',
+                'FROM TRADES t ',
+                'LEFT OUTER JOIN BOOKS b ON b.ID=t.BOOK ',
+                'LEFT OUTER JOIN SECINFO s ON s.SEC_CODE=t.INST_CODE ',
+                """WHERE t.TRADE_DATETIME<='%s' """ % datetime.datetime(self.asOfDate.year, self.asOfDate.month, self.asOfDate.day, 23, 59, 59),
+                'GROUP BY t.INST_CODE '])
 
 class PositionViewSet(ViewBaseSet):
     def __init__(self, sysdate, parent=None):

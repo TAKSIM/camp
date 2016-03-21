@@ -28,23 +28,6 @@ class TradeDataModel(QtSql.QSqlQueryModel):
 class TradeView(ViewBase):
     def __init__(self, sysdate, user, parent=None):
         super(TradeView, self).__init__(
-                          query='SELECT t.TRADE_DATETIME, '
-                                'b.NAME_CN, '
-                                'u.NAME, '
-                                't.INST_CODE, '
-                                's.SEC_NAME, s.SEC_TYPE, s.EXCHANGE, '
-                                't.AMOUNT, '
-                                't.PRICE, '
-                                't.REF_YIELD, '
-                                't.SETTLE_DATE, '
-                                't.SETTLED_BY, '
-                                't.COMMENT, '
-                                't.TRADE_ID '
-                                'FROM TRADES t '
-                                'LEFT OUTER JOIN BOOKS b on b.ID=t.BOOK '
-                                'LEFT OUTER JOIN USERS u on u.ID=t.TRADER '
-                                'LEFT OUTER JOIN SECINFO s on s.SEC_CODE=t.INST_CODE '
-                                """ WHERE t.TRADE_DATETIME<='%s'""" % datetime.datetime(sysdate.year, sysdate.month, sysdate.day, 23, 59, 59),
                           header=[u'交易日', # 0
                                   u'账簿', # 1
                                   u'交易员', # 2
@@ -60,9 +43,9 @@ class TradeView(ViewBase):
                           tablename=u'交易明细',
                           datatypes='tssssssfffdss',
                           datamodel=TradeDataModel(),
+                          asOfDate=sysdate,
                           menu=True,
                           parent=parent)
-        self.sysdate = sysdate
         self.user = user
 
         self.sortByColumn(0, QtCore.Qt.DescendingOrder)
@@ -76,6 +59,25 @@ class TradeView(ViewBase):
         self.setItemDelegateForColumn(8, nfPct)
         self.setItemDelegateForColumn(9, nfPct)
         self.setItemDelegateForColumn(10, df)
+
+    def build_query(self):
+        self.query = ''.join([  'SELECT t.TRADE_DATETIME, ',
+                                'b.NAME_CN, ',
+                                'u.NAME, ',
+                                't.INST_CODE, ',
+                                's.SEC_NAME, s.SEC_TYPE, s.EXCHANGE, ',
+                                't.AMOUNT, ',
+                                't.PRICE, ',
+                                't.REF_YIELD, ',
+                                't.SETTLE_DATE, ',
+                                't.SETTLED_BY, ',
+                                't.COMMENT, ',
+                                't.TRADE_ID ',
+                                'FROM TRADES t ',
+                                'LEFT OUTER JOIN BOOKS b on b.ID=t.BOOK ',
+                                'LEFT OUTER JOIN USERS u on u.ID=t.TRADER ',
+                                'LEFT OUTER JOIN SECINFO s on s.SEC_CODE=t.INST_CODE ',
+                                """ WHERE t.TRADE_DATETIME<='%s'""" % datetime.datetime(self.asOfDate.year, self.asOfDate.month, self.asOfDate.day, 23, 59, 59) ])
 
     def buildMenu(self):
         self.menu = QtGui.QMenu()

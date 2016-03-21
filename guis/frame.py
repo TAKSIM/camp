@@ -25,7 +25,6 @@ class Desktop(QtGui.QMainWindow):
     def __init__(self):
         super(Desktop, self).__init__()
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
-        self.td = datetime.date.today()
         self.initDB()
         login = LoginPage()
         if login.exec_():
@@ -90,13 +89,17 @@ class Desktop(QtGui.QMainWindow):
         p = QtGui.QPalette()
         p.setColor(p.Base, cd==td and ColorWhite or ColorHighlightText)
         self.sysdate.setPalette(p)
+        self.avs.vb.date_update(cd)
+        self.tvs.vb.date_update(cd)
+        self.bvs.vb.date_update(cd)
+        self.lvs.vb.date_update(cd)
 
     def createPages(self):
         self.stackedLayout = QtGui.QStackedLayout()
         # acct overview
         self.acctview = QtGui.QWidget()
         layout_acctview = QtGui.QGridLayout()
-        self.avs =PositionViewSet(self.td)
+        self.avs =PositionViewSet(self.sysdate.date().toPyDate())
         gbTrade = QtGui.QGroupBox(u'交易')
         tradeLayout = QtGui.QHBoxLayout()
         self.btnTrade = QtGui.QPushButton(u'债券/股票/货基/回购')
@@ -128,7 +131,7 @@ class Desktop(QtGui.QMainWindow):
         # trade details
         self.tradedetails = QtGui.QWidget()
         layout_tradedetails = QtGui.QGridLayout()
-        self.tvs = TradeViewSet(self.td, self.user)
+        self.tvs = TradeViewSet(self.sysdate.date().toPyDate(), self.user)
         layout_tradedetails.addWidget(self.tvs.btnRefresh,0,0,1,1)
         layout_tradedetails.addWidget(self.tvs.btnExportToExcel,0,1,1,1)
         layout_tradedetails.addWidget(QtGui.QLabel(u'筛选列'),0,2,1,1)
@@ -142,7 +145,7 @@ class Desktop(QtGui.QMainWindow):
         # book details
         self.bookdetails = QtGui.QWidget()
         layout_bookdetails = QtGui.QGridLayout()
-        self.bvs = BookViewSet()
+        self.bvs = BookViewSet(self.sysdate.date().toPyDate())
         layout_bookdetails.addWidget(self.bvs.btnRefresh,0,0,1,1)
         self.newbook = QtGui.QPushButton(u'添加账簿')
         self.newbook.clicked.connect(self.showNewBook)
@@ -162,7 +165,7 @@ class Desktop(QtGui.QMainWindow):
         layout_subdetails = QtGui.QGridLayout()
         self.newsub = QtGui.QPushButton(u'添加认购信息')
         self.newsub.clicked.connect(self.showNewSub)
-        self.lvs = LiabilityViewSet(self.td, self.user)
+        self.lvs = LiabilityViewSet(self.sysdate.date().toPyDate(), self.user)
         layout_subdetails.addWidget(self.newsub, 0, 0, 1, 1)
         layout_subdetails.addWidget(self.lvs.btnExportToExcel, 0, 1, 1, 1)
         layout_subdetails.addWidget(self.lvs.cbShowLiveOnly, 0, 2, 1, 1)
@@ -191,7 +194,7 @@ class Desktop(QtGui.QMainWindow):
         canvas = figureCanvas(f)
         canvas.setParent(w)
         sns.set(style="whitegrid")
-        q = QtSql.QSqlQuery("""SELECT EXP_DATE, SUM(AMOUNT), SUM(AMOUNT*(1+EXP_RETURN*(datediff(EXP_DATE, SETTLE_DATE)+1)/36500.0)) FROM LIABILITY WHERE EXP_DATE>='%s' GROUP BY EXP_DATE ORDER BY EXP_DATE"""%self.td)
+        q = QtSql.QSqlQuery("""SELECT EXP_DATE, SUM(AMOUNT), SUM(AMOUNT*(1+EXP_RETURN*(datediff(EXP_DATE, SETTLE_DATE)+1)/36500.0)) FROM LIABILITY WHERE EXP_DATE>='%s' GROUP BY EXP_DATE ORDER BY EXP_DATE"""%self.sysdate.date().toPyDate())
         dates, vals = [], []
         x_amt = range(0,1000000000,100000000)
         while q.next():
@@ -253,7 +256,7 @@ class Desktop(QtGui.QMainWindow):
             self.bvs.vb.refresh()
 
     def switchLayout(self, itemName):
-        if itemName == Qt.QString(u'账户总览'):
+        if itemName == Qt.QString(u'持仓'):
             self.stackedLayout.setCurrentWidget(self.acctview)
         elif itemName == Qt.QString(u'交易明细'):
             self.stackedLayout.setCurrentWidget(self.tradedetails)
@@ -442,7 +445,7 @@ class TreeControl(QtGui.QTreeWidget):
 
     def addItems(self, parent):
         assets_item = self.addParent(parent, u'资产', QtGui.QIcon('guis/icons/asset.png'))
-        self.addChild(assets_item, u'账户总览', QtGui.QIcon('guis/icons/checklist.png'))
+        self.addChild(assets_item, u'持仓', QtGui.QIcon('guis/icons/checklist.png'))
         self.addChild(assets_item, u'交易明细', QtGui.QIcon('guis/icons/details.png'))
         self.addChild(assets_item, u'账簿信息', QtGui.QIcon('guis/icons/info.png'))
 
