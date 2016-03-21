@@ -74,11 +74,12 @@ class NewBond(PanelBase):
 
         gbTrade = QtGui.QGroupBox(u'交易')
         tradeLayout = QtGui.QGridLayout()
-        tradeLayout.addWidget(QtGui.QLabel(u'交易日'),0,0,1,1)
+        tradeLayout.addWidget(QtGui.QLabel(u'交易日'),0, 0, 1, 1)
         self.tradeDateTime = QtGui.QDateTimeEdit(datetime.datetime.now())
         self.tradeDateTime.setCalendarPopup(True)
-        tradeLayout.addWidget(self.tradeDateTime,0,1,1,1)
-        tradeLayout.addWidget(QtGui.QLabel(u'账簿'),1,0,1,1)
+        self.tradeDateTime.dateTimeChanged.connect(self.on_tradedate_change)
+        tradeLayout.addWidget(self.tradeDateTime, 0, 1, 1, 1)
+        tradeLayout.addWidget(QtGui.QLabel(u'账簿'), 1, 0, 1, 1)
         self.books = QtGui.QComboBox()
         q = QtSql.QSqlQuery('SELECT NAME_CN FROM BOOKS ORDER BY ID')
         books = []
@@ -147,6 +148,9 @@ class NewBond(PanelBase):
             self.settleDate.setDate(self.dateCalc.NextBusinessDay(self.tradeDateTime.dateTime().toPyDateTime().date(), numDays=n))
         else:
             pass
+
+    def on_tradedate_change(self):
+        self.updateSettleDate()
 
     def updateInfo(self):
         infolist = ['sec_name', # 证券简称

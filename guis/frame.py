@@ -378,7 +378,8 @@ class Desktop(QtGui.QMainWindow):
             pass
 
     def refresh(self):
-        self.lvs.vb.refresh() # liability view
+        self.sysdate.setDate(datetime.date.today())
+        self.on_sysdate_change()
 
     def createSystemTray(self):
         self.trayIconMenu = QtGui.QMenu(self)

@@ -3,7 +3,7 @@ from view_base import ViewBase, ViewBaseSet, NumberDelegate, DateDelegate, DateT
 from PyQt4 import QtCore, QtGui, QtSql
 import datetime
 from trade import Trade
-from settings import ColorHighlightText
+from settings import ColorHighlightText, ColorBlueBar
 
 
 class TradeDataModel(QtSql.QSqlQueryModel):
@@ -16,6 +16,8 @@ class TradeDataModel(QtSql.QSqlQueryModel):
         elif int_role == QtCore.Qt.BackgroundColorRole:
             if self.data(self.index(index.row(), 11), QtCore.Qt.DisplayRole).toString().isEmpty():  # if settle date is not confirmed
                 return ColorHighlightText
+            elif self.data(self.index(index.row(), 0), QtCore.Qt.DisplayRole).toDateTime().toPyDateTime().date() == datetime.date.today():
+                return ColorBlueBar
         else:
             return super(TradeDataModel, self).data(index, int_role)
 
