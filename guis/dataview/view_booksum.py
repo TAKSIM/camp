@@ -54,7 +54,8 @@ class PositionView(ViewBase):
                 'LEFT OUTER JOIN BOOKS b ON b.ID=t.BOOK ',
                 'LEFT OUTER JOIN SECINFO s ON s.SEC_CODE=t.INST_CODE ',
                 """WHERE t.TRADE_DATETIME<='%s' """ % datetime.datetime(self.asOfDate.year, self.asOfDate.month, self.asOfDate.day, 23, 59, 59),
-                'GROUP BY t.INST_CODE '])
+                'GROUP BY t.INST_CODE ',
+                'HAVING SUM(t.AMOUNT)<>0'])
 
 class PositionViewSet(ViewBaseSet):
     def __init__(self, sysdate, parent=None):
