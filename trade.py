@@ -91,6 +91,9 @@ class Trade(object):
     def isSettled(self):
         return len(self.settledBy) > 0
 
+    def cashflows(self):
+        return None
+
 
 class CashTrade(Trade):
     def __init__(self, book, trader, tradeDateTime, amount, instCode='CASH_IB', refTrade='', comment='', tradeID=None):
@@ -100,6 +103,9 @@ class CashTrade(Trade):
     def value(self, asOfDate):
         return asOfDate < self.settleDate and self.amount or 0.
 
+    def cashflows(self):
+        return {self.settleDate : self.amount}
+
 
 class DepoTrade(Trade):
     def __init__(self, book, trader, tradeDateTime, amount, rtn, maturityDate, dcc='Act/360', settledBy='', comment='', tradeID=None):
@@ -107,7 +113,10 @@ class DepoTrade(Trade):
                        collateralized=False, refTrade='', refYield=rtn, settledBy=settledBy, comment=comment, maturityDate=maturityDate, tradeID=tradeID)
 
     def totalReturn(self):
-        return (self.maturityDate - self.settleDate).days / 360.0 * self.refYield / 100.0 * self.amount
+        return -(self.maturityDate - self.settleDate).days / 360.0 * self.refYield / 100.0 * self.amount
+
+    def cashflows(self):
+        return {self.settleDate:self.amount, self.maturityDate:self.totalReturn()}
 
     def value(self, asOfDate):
         if self.isSettled():
@@ -125,6 +134,7 @@ class DepoTrade(Trade):
 class BondTrade(Trade):
     def __init__(self, book, trader, tradeDateTime, settleDate, instCode, amount, price, refYield, collateralized = False, refTrade = '', settledBy = '', comment = '', tradeID=None):
         super(BondTrade, self).__init__(book, trader, tradeDateTime, settleDate, instCode, amount, price, refYield=refYield, collateralized=collateralized, refTrade=refTrade, settledBy=settledBy, comment=comment, tradeID=tradeID)
+        self.face = 100.
 
     def value(self, asOfDate):
         result = w.wss(self.instCode, ['yield_cnbd'], 'tradeDate={0}'.format(format(asOfDate,'%Y%m%d')), 'credibility=1')
@@ -133,6 +143,11 @@ class BondTrade(Trade):
             return v
         else:
             return None
+
+    def cashflows(self):
+        cfs = {self.settleDate: -self.price*self.amount}
+        # coupons
+        return cfs
 
     def settle(self, trader):
         q = QtSql.QSqlQuery()
