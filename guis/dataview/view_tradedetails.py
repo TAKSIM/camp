@@ -18,6 +18,11 @@ class TradeDataModel(QtSql.QSqlQueryModel):
                 return ColorHighlightText
             elif self.data(self.index(index.row(), 0), QtCore.Qt.DisplayRole).toDateTime().toPyDateTime().date() == datetime.date.today():
                 return ColorBlueBar
+        elif int_role == QtCore.Qt.DecorationRole and index.column() == 14:
+            if self.data(self.index(index.row(), 14), QtCore.Qt.DisplayRole).toString().isEmpty():  # order file not saved
+                return QtGui.QIcon('guis/icons/redcross.png')
+            else:
+                return QtGui.QIcon('guis/icons/greencheck.png')
         else:
             return super(TradeDataModel, self).data(index, int_role)
 
@@ -39,9 +44,10 @@ class TradeView(ViewBase):
                                   u'交割日', # 10
                                   u'交割确认',  # 11
                                   u'备注', # 12
-                                  u'交易编码'], # 13
+                                  u'交易编码',  # 13
+                                  u'指令上传'],  # 14
                           tablename=u'交易明细',
-                          datatypes='tssssssfffdss',
+                          datatypes='tssssssfffdsss',
                           datamodel=TradeDataModel(),
                           asOfDate=sysdate,
                           menu=True,
@@ -72,7 +78,8 @@ class TradeView(ViewBase):
                                 't.SETTLE_DATE, ',
                                 't.SETTLED_BY, ',
                                 't.COMMENT, ',
-                                't.TRADE_ID ',
+                                't.TRADE_ID, ',
+                                't.ORDER_SAVED ',
                                 'FROM TRADES t ',
                                 'LEFT OUTER JOIN BOOKS b on b.ID=t.BOOK ',
                                 'LEFT OUTER JOIN USERS u on u.ID=t.TRADER ',
