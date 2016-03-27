@@ -17,7 +17,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import ctypes
 from settings import ColorWhite, ColorHighlightText
-from utils import DateCalculator
+from utils import DateCalculator, OSS
 ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID('myappid')
 
 
@@ -131,7 +131,7 @@ class Desktop(QtGui.QMainWindow):
         # trade details
         self.tradedetails = QtGui.QWidget()
         layout_tradedetails = QtGui.QGridLayout()
-        self.tvs = TradeViewSet(self.sysdate.date().toPyDate(), self.user)
+        self.tvs = TradeViewSet(self.sysdate.date().toPyDate(), self.user, self.oss)
         layout_tradedetails.addWidget(self.tvs.btnRefresh,0,0,1,1)
         layout_tradedetails.addWidget(self.tvs.btnExportToExcel,0,1,1,1)
         layout_tradedetails.addWidget(QtGui.QLabel(u'筛选列'),0,2,1,1)
@@ -279,6 +279,7 @@ class Desktop(QtGui.QMainWindow):
         if not self.db.open():
             raise Exception(u'无法连接数据库')
         QtSql.QSqlDatabase().setConnectOptions('MYSQL_OPT_RECONNECT=1')
+        self.oss = OSS()
 
     def initFromDB(self):
         self.loadBooks()
