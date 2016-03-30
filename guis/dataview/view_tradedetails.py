@@ -3,7 +3,7 @@ from view_base import ViewBase, ViewBaseSet, NumberDelegate, DateDelegate, DateT
 from PyQt4 import QtCore, QtGui, QtSql
 import datetime
 from trade import Trade
-from settings import ColorHighlightText, ColorBlueBar
+from guis.settings import ColorHighlightText, ColorBlueBar
 
 
 class TradeDataModel(QtSql.QSqlQueryModel):
@@ -19,10 +19,10 @@ class TradeDataModel(QtSql.QSqlQueryModel):
             elif self.data(self.index(index.row(), 0), QtCore.Qt.DisplayRole).toDateTime().toPyDateTime().date() == datetime.date.today():
                 return ColorBlueBar
         elif int_role == QtCore.Qt.DecorationRole and index.column() == 14:
-            if self.data(self.index(index.row(), 14), QtCore.Qt.DisplayRole).toString().isEmpty():  # order file not saved
-                return QtGui.QIcon('guis/icons/redcross.png')
-            else:
+            if not self.data(self.index(index.row(), 14), QtCore.Qt.DisplayRole).toString().isEmpty() or str(self.data(self.index(index.row(), 3), QtCore.Qt.DisplayRole).toString()) in ['CASH_IB', 'CASH_EX']:  # order file saved or unnecessary
                 return QtGui.QIcon('guis/icons/greencheck.png')
+            else:
+                return QtGui.QIcon('guis/icons/redcross.png')
         else:
             return super(TradeDataModel, self).data(index, int_role)
 
@@ -35,7 +35,7 @@ class TradeView(ViewBase):
         super(TradeView, self).__init__(
                           header=[u'交易日', # 0
                                   u'账簿', # 1
-                                  u'交易员', # 2
+                                  u'下单', # 2
                                   u'代码', # 3
                                   u'名称', u'类别', u'市场', # 4 5 6
                                   u'数量', # 7
@@ -55,6 +55,8 @@ class TradeView(ViewBase):
         self.user = user
         self.oss = oss
         self.sortByColumn(0, QtCore.Qt.DescendingOrder)
+        #self.hideColumn(11)
+        self.hideColumn(13)
         nfAmt = NumberDelegate(parent=self, withComma=True, numDigits=0)
         nfPct = NumberDelegate(parent=self, withComma=False, numDigits=2)
         df = DateDelegate(parent=self)
