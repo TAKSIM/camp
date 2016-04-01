@@ -67,12 +67,22 @@ class PositionView(ViewBase):
                 'FROM TRADES t ',
                 'LEFT OUTER JOIN BOOKS b ON b.ID=t.BOOK ',
                 'LEFT OUTER JOIN SECINFO s ON s.SEC_CODE=t.INST_CODE ',
-                """WHERE t.TRADE_DATETIME<='%s' """ % datetime.datetime(self.asOfDate.year, self.asOfDate.month, self.asOfDate.day, 23, 59, 59),
-                'GROUP BY t.INST_CODE ',
+                """WHERE t.TRADE_DATETIME<='%s' AND t.EXP_SETTLED_BY IS NULL """ % datetime.datetime(self.asOfDate.year, self.asOfDate.month, self.asOfDate.day, 23, 59, 59),
+                'GROUP BY t.BOOK, t.INST_CODE ',
                 'HAVING SUM(t.AMOUNT)<>0'])
 
     def confirmExpSettle(self):
-        pass
+        rowIndex = self.currentIndex().row()
+        code = self.model().index(rowIndex, 1).data().toString()
+        if str(code) in ['CASH_EX', 'CASH_IB']:
+            QtGui.QMessageBox.warning(self, u'提示', u'现金头寸不涉及到期交割')
+        else:
+            name = self.model().index(rowIndex, 2).data().toString()
+            if QtGui.QMessageBox.question(self, u'到期交割', u'确认 <b>'+unicode(name)+u'</b> 到期交割？') == QtGui.QMessageBox.Yes:
+                mkt = self.model().index(rowIndex, 4).data().toString()
+                cash_code = mkt==QtCore.QString(u'银行间债券') and 'CASH_IB' or 'CASH_EX'
+
+
 
 class PositionViewSet(ViewBaseSet):
     def __init__(self, sysdate, parent=None):
