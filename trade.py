@@ -91,8 +91,8 @@ class Trade(object):
     def isSettled(self):
         return len(self.settledBy) > 0
 
-    def cashflows(self):
-        return None
+    def cashflows(self, asOfDate):
+        return {}
 
 
 class CashTrade(Trade):
@@ -103,8 +103,9 @@ class CashTrade(Trade):
     def value(self, asOfDate):
         return asOfDate < self.settleDate and self.amount or 0.
 
-    def cashflows(self):
-        return {self.settleDate : self.amount}
+    def cashflows(self, asOfDate):
+        if asOfDate < self.settleDate:
+            return {self.settleDate : self.amount}
 
 
 class DepoTrade(Trade):
@@ -115,8 +116,11 @@ class DepoTrade(Trade):
     def totalReturn(self):
         return -(self.maturityDate - self.settleDate).days / 360.0 * self.refYield / 100.0 * self.amount
 
-    def cashflows(self):
-        return {self.settleDate:self.amount, self.maturityDate:self.totalReturn()}
+    def cashflows(self, asOfDate):
+        if asOfDate < self.settleDate or asOfDate > self.maturityDate:
+            return None
+        else:
+            return {self.maturityDate : self.totalReturn()}
 
     def value(self, asOfDate):
         if self.isSettled():
@@ -137,7 +141,7 @@ class BondTrade(Trade):
         self.face = 100.
 
     def value(self, asOfDate):
-        result = w.wss(self.instCode, ['yield_cnbd'], 'tradeDate={0}'.format(format(asOfDate,'%Y%m%d')), 'credibility=1')
+        result = w.wss(self.instCode, ['dirty_cnbd'], 'tradeDate={0}'.format(format(asOfDate,'%Y%m%d')), 'credibility=1')
         if result.ErrorCode == 0:
             v = result.Data[0][0]
             return v
