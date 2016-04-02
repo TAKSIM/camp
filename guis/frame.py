@@ -333,10 +333,9 @@ class Desktop(QtGui.QMainWindow):
         m1.addAction(self.refreshAction)
         m1.addAction(self.exitAction)
 
-        # m2 = self.mb.addMenu(u'&交易')
-        # m2.addAction(self.tradeBond)
-        # m2.addAction(self.tradeDepo)
-        # m2.addAction(self.tradeMmf)
+        m2 = self.mb.addMenu(u'&报告')
+        m2.addAction(self.rptCashFlow)
+        m2.addAction(self.rptValuation)
 
         m3 = self.mb.addMenu(u'&帮助')
         m3.addAction(self.aboutAction)
@@ -347,15 +346,20 @@ class Desktop(QtGui.QMainWindow):
         self.refreshAction = QtGui.QAction(QtGui.QIcon('guis/icons/refresh.png'), u'刷新', self, triggered=self.refresh, shortcut='F5')
         self.holAction = QtGui.QAction(QtGui.QIcon('guis/icons/settings.png'), u'假期设置', self, shortcut='Ctrl+H', triggered=self.showHolidayPanel)
 
-        # self.tradeBond = QtGui.QAction(u'债券', self, shortcut='Ctrl+B', triggered=self.showBondPanel)
-        # self.tradeDepo = QtGui.QAction(u'同业存款', self, shortcut='Ctrl+D', triggered=self.showDepoPanel)
-        # self.tradeMmf = QtGui.QAction(u'货币基金', self, shortcut='Ctrl+M', triggered=self.showMmfPanel)
+        self.rptCashFlow = QtGui.QAction(u'现金流报告', self, triggered=self.runrptCashFlow)
+        self.rptValuation = QtGui.QAction(u'估值报告', self, triggered=self.runrptValuation)
 
         self.aboutAction = QtGui.QAction(u"关于CAMP", self, triggered=self.about)
 
         self.minimize = QtGui.QAction(u'最小化', self, triggered=self.hide)
         self.maximize = QtGui.QAction(u'最大化',self, triggered=self.showMaximized)
         self.restore = QtGui.QAction(u'还原', self, triggered=self.showNormal)
+
+    def runrptCashFlow(self):
+        pass
+
+    def runrptValuation(self):
+        pass
 
     def showDepoPanel(self):
         import tradepanel

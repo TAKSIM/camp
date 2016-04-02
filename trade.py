@@ -32,7 +32,7 @@ class Trade(object):
     def toDB(self):
         q = QtSql.QSqlQuery()
         try:
-            query = """INSERT INTO TRADES VALUES ('%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s')""" % (self.tradeID, self.book, self.trader, self.tradeDateTime, self.settleDate, self.instCode, self.amount, self.price, int(self.collateralized), self.refTrade, self.refYield, self.settledBy, self.comment, self.maturityDate, 'NULL', 'NULL')
+            query = """INSERT INTO TRADES VALUES ('%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s',NULL,NULL)""" % (self.tradeID, self.book, self.trader, self.tradeDateTime, self.settleDate, self.instCode, self.amount, self.price, int(self.collateralized), self.refTrade, self.refYield, self.settledBy, self.comment, self.maturityDate)
             q.exec_(query)
             #print query
             QtSql.QSqlDatabase().commit()
@@ -101,7 +101,7 @@ class CashTrade(Trade):
                        collateralized=False, refTrade=refTrade, refYield=0, settledBy=trader, comment=comment, tradeID=tradeID)
 
     def value(self, asOfDate):
-        return asOfDate < self.settleDate and self.amount or 0.
+        return asOfDate >= self.settleDate and self.amount or 0.
 
     def cashflows(self):
         return {self.settleDate : self.amount}
