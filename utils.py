@@ -25,6 +25,13 @@ def sendmail(sender, to, subject, contents, texttype='plain'):
     finally:
         s.quit()
 
+def YearFrraction(dcc, startDate, endDate):
+    if dcc in ['A/365', 'Act/365']:
+        return (endDate-startDate).days/365.
+    elif dcc in ['Act/Act']:
+        return (endDate-startDate).days/365.
+    else:
+        return None
 
 class DateCalculator(object):
     def __init__(self, workdays, holidays):
