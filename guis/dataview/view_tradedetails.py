@@ -145,6 +145,17 @@ class TradeView(ViewBase):
         else:
             QtGui.QMessageBox.warning(self, u'错误', u'无法从数据库读取该笔交易')
 
+    def confirmExpSettle(self):
+        rowIndex = self.currentIndex().row()
+        tradeID = self.model().index(rowIndex, 13).data().toString()
+        trd = Trade.fromDB(tradeID)
+        if trd:
+            if self.asOfDate != trd.maturityDate:
+                QtGui.QMessageBox.warning(self, u'注意', u'当前日期与预期到期交割日不同，将按当前日期做到期交割')
+            trd.expsettle(self.user.id)
+        else:
+            QtGui.QMessageBox.warning(self, u'错误', u'无法从数据库读取该笔交易')
+
     def deleteTrade(self):
         rowIndex = self.currentIndex().row()
         tradeID = self.model().index(rowIndex, 13).data().toString()

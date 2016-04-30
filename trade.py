@@ -3,6 +3,7 @@ import hashlib
 from PyQt4 import QtSql, QtCore
 from WindPy import w
 import datetime
+from utils import YearFrraction
 
 class Trade(object):
     def __init__(self, *args, **kwargs):
@@ -85,6 +86,9 @@ class Trade(object):
             print e.message
             QtSql.QSqlDatabase().rollback()
 
+    def expsettle(self, trader):
+        self.settle(trader)
+
     def value(self, asOfDate):
         raise NotImplemented()
 
@@ -109,9 +113,10 @@ class CashTrade(Trade):
 
 
 class DepoTrade(Trade):
-    def __init__(self, book, trader, tradeDateTime, amount, rtn, maturityDate, dcc='Act/360', settledBy='', comment='', tradeID=None):
-        super(DepoTrade, self).__init__(book, trader, tradeDateTime, tradeDateTime.date(), 'IBDP', amount, 1.0,
+    def __init__(self, book, trader, tradeDateTime, amount, rtn, maturityDate, instCode='IBDP', dcc='Act/360', settledBy='', comment='', tradeID=None):
+        super(DepoTrade, self).__init__(book, trader, tradeDateTime, tradeDateTime.date(), instCode, amount, 1.0,
                        collateralized=False, refTrade='', refYield=rtn, settledBy=settledBy, comment=comment, maturityDate=maturityDate, tradeID=tradeID)
+        self.dcc = dcc
 
     def totalReturn(self):
         return -(self.maturityDate - self.settleDate).days / 360.0 * self.refYield / 100.0 * self.amount
@@ -126,14 +131,18 @@ class DepoTrade(Trade):
         if self.isSettled():
             if asOfDate > self.settleDate:
                 expdate = asOfDate > self.maturityDate and self.maturityDate or asOfDate
-                return (expdate-self.settleDate).days/360.*self.refYield/100.*self.amount
+                return YearFrraction(self.dcc, self.settleDate, expdate)*self.refYield/100.*self.amount
         return 0.
 
     def settle(self, trader):
         super(DepoTrade, self).settle(trader=trader)
-        ct = CashTrade(self.book, trader, self.tradeDateTime, -self.amount, instCode='CASH_IB', refTrade=self.tradeID, comment=u'同存存出')
+        ct = CashTrade(self.book, trader, self.tradeDateTime, -self.amount, instCode='CASH_IB', refTrade=self.tradeID, comment=u'存出')
         ct.toDB()
 
+    def expsettle(self, trader):
+        super(DepoTrade, self).expsettle(trader)
+        cr = CashTrade(self.book, trader, self.maturityDate, self.value(self.maturityDate), instCode='CASH_IB', refTrade=self.tradeID, comment=u'到期收益')
+        cr.toDB()
 
 class BondTrade(Trade):
     def __init__(self, book, trader, tradeDateTime, settleDate, instCode, amount, price, refYield, collateralized = False, refTrade = '', settledBy = '', comment = '', tradeID=None):
@@ -167,6 +176,12 @@ class BondTrade(Trade):
         except Exception, e:
             print e.message
             QtSql.QSqlDatabase().rollback()
+
+    def expsettle(self, trader):
+        super(BondTrade, self).expsettle(trader)
+        cr = CashTrade(self.book, trader, self.maturityDate, self.face*self.amount, instCode='CASH_IB', refTrade=self.tradeID, comment=u'债券到期兑付本金')
+        cr.toDB()
+
 
 
 

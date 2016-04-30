@@ -60,6 +60,7 @@ class DateCalculator(object):
         else:
             return t not in self.holidays
 
+
 class OSS(object):
     def __init__(self, publicID=None, privateID=None, endPoint=None):
         self.auth = oss2.Auth(publicID or 'KQroupAjGmgioT6R', privateID or 'zapEAIJTOrJnWpW25eB6LIK6PBdOKh')
