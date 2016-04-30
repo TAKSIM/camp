@@ -17,9 +17,10 @@ def sendmail(sender, to, subject, contents, texttype='plain'):
     msg['Subject'] = Header(subject.encode(encode), encode).encode()
     msg['From'] = sender
     msg['To'] = ', '.join(to)
-    s = SMTP('mail.caitc.cn')
+    s = SMTP('smtp.exmail.qq.com')
+    s.ehlo('smtp.exmail.qq.com')
     s.set_debuglevel(False)
-    s.login('hewei','WeHeA1984')
+    s.login('hewei@caitc.cn','GMvsBWKwZty47LG2') # access code is generated from web (settings->account->wechat code)
     try:
         s.sendmail(sender, to, msg.as_string())
     finally:
