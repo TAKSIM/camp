@@ -5,8 +5,9 @@ from guis.panel.panel_newsub import ConfirmSub
 
 
 class SubDataModel(QtSql.QSqlQueryModel):
-    def __init__(self, parent=None):
+    def __init__(self, sysdate, parent=None):
         super(SubDataModel, self).__init__(parent=parent)
+        self.asOfDate = sysdate
 
     def data(self, index, int_role=None):
         if int_role == QtCore.Qt.TextAlignmentRole and index.column() in [2, 7, 8, 10]:
@@ -40,7 +41,7 @@ class LiabilityView(ViewBase):
                       ],
             tablename=u'申购信息',
             datatypes='ddfssssffdisd',
-            datamodel=SubDataModel(),
+            datamodel=SubDataModel(sysdate),
             asOfDate=sysdate,
             menu=True,
             parent=parent)
@@ -85,6 +86,12 @@ class LiabilityView(ViewBase):
         actConfirm = QtGui.QAction(u'确认到账', self, triggered=self.confirmSub)
         self.menu.addAction(actConfirm)
         self.menu.addAction(actRemoveRow)
+
+    def date_update(self, newDate):
+        self.asOfDate = newDate
+        self.dataModel.asOfDate = newDate
+        self.build_query()
+        self.refresh()
 
     def removeRow(self):
         rowIndex = self.currentIndex().row()

@@ -7,13 +7,13 @@ from guis.settings import ColorHighlightText
 class PositionDataModel(QtSql.QSqlQueryModel):
     def __init__(self, sysdate, parent=None):
         super(PositionDataModel, self).__init__(parent=parent)
-        self.sysdate = sysdate
+        self.asOfDate = sysdate
 
     def data(self, index, int_role=None):
         if int_role == QtCore.Qt.TextAlignmentRole and index.column() in [5, 6, 7]:
             return QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter
         elif int_role == QtCore.Qt.BackgroundColorRole:
-            if self.data(self.index(index.row(), 8), QtCore.Qt.DisplayRole).toDate().toPyDate() == self.sysdate:
+            if self.data(self.index(index.row(), 8), QtCore.Qt.DisplayRole).toDate().toPyDate() <= self.asOfDate:
                 return ColorHighlightText
 
         return super(PositionDataModel, self).data(index, int_role)
@@ -47,7 +47,7 @@ class PositionView(ViewBase):
 
     def date_update(self, newDate):
         self.asOfDate = newDate
-        self.dataModel.sysdate = newDate
+        self.dataModel.asOfDate = newDate
         self.build_query()
         self.refresh()
 

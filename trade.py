@@ -69,7 +69,7 @@ class Trade(object):
                     obj = DepoTrade(book, trader, tradeDateTime, amount, refYield, maturityDate, dcc='Act/360', settledBy=settledBy, comment=comment, tradeID=tradeID)
                     return obj
                 elif secname in [QtCore.QString(u'短期融资券'), QtCore.QString(u'企债')]:
-                    obj = BondTrade(book, trader, tradeDateTime, settleDate, instCode, amount, price, refYield, collateralized=collateralized, refTrade=refTrade, settledBy=settledBy, comment=comment, tradeID=tradeID)
+                    obj = BondTrade(book, trader, tradeDateTime, settleDate, instCode, amount, price, refYield, maturityDate, collateralized=collateralized, refTrade=refTrade, settledBy=settledBy, comment=comment, tradeID=tradeID)
                     return obj
                 else:
                     raise NotImplementedError('Unknown trade type')
@@ -87,7 +87,16 @@ class Trade(object):
             QtSql.QSqlDatabase().rollback()
 
     def expsettle(self, trader):
-        self.settle(trader)
+        q = QtSql.QSqlQuery()
+        try:
+            query = """UPDATE TRADES SET EXP_SETTLED_BY='%s' WHERE TRADE_ID='%s'""" % (self.settledBy, self.tradeID)
+            q.exec_(query)
+            #print query
+            QtSql.QSqlDatabase().commit()
+            self.settledBy = trader
+        except Exception, e:
+            print e.message
+            QtSql.QSqlDatabase().rollback()
 
     def value(self, asOfDate):
         raise NotImplemented()
@@ -145,8 +154,8 @@ class DepoTrade(Trade):
         cr.toDB()
 
 class BondTrade(Trade):
-    def __init__(self, book, trader, tradeDateTime, settleDate, instCode, amount, price, refYield, collateralized = False, refTrade = '', settledBy = '', comment = '', tradeID=None):
-        super(BondTrade, self).__init__(book, trader, tradeDateTime, settleDate, instCode, amount, price, refYield=refYield, collateralized=collateralized, refTrade=refTrade, settledBy=settledBy, comment=comment, tradeID=tradeID)
+    def __init__(self, book, trader, tradeDateTime, settleDate, instCode, amount, price, refYield, maturityDate, collateralized = False, refTrade = '', settledBy = '', comment = '', tradeID=None):
+        super(BondTrade, self).__init__(book, trader, tradeDateTime, settleDate, instCode, amount, price, refYield=refYield, maturityDate=maturityDate, collateralized=collateralized, refTrade=refTrade, settledBy=settledBy, comment=comment, tradeID=tradeID)
         self.face = 100.
 
     def value(self, asOfDate):
@@ -179,7 +188,7 @@ class BondTrade(Trade):
 
     def expsettle(self, trader):
         super(BondTrade, self).expsettle(trader)
-        cr = CashTrade(self.book, trader, self.maturityDate, self.face*self.amount, instCode='CASH_IB', refTrade=self.tradeID, comment=u'债券到期兑付本金')
+        cr = CashTrade(self.book, trader, datetime.datetime.fromordinal(self.maturityDate.toordinal()), self.face*self.amount, instCode='CASH_IB', refTrade=self.tradeID, comment=u'债券到期兑付本金')
         cr.toDB()
 
 
