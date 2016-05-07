@@ -5,6 +5,7 @@ from WindPy import w
 import datetime
 from utils import YearFrraction
 
+
 class Trade(object):
     def __init__(self, *args, **kwargs):
         if len(args) > 1:
@@ -121,6 +122,16 @@ class CashTrade(Trade):
             return {self.settleDate : self.amount}
 
 
+class FwdCashTrade(Trade):
+    def __init__(self, book, instCode, trader, tradeDateTime, settleDate, maturityDate, amount, rtn, settledBy='', comment='', tradeID=None):
+        super(FwdCashTrade, self).__init__(book, trader, tradeDateTime, settleDate, instCode, amount, 1.0,
+                                           collateralized=False, refTrade='', refYield=rtn, settledBy=settledBy, comment=comment, maturityDate=maturityDate, tradeID=tradeID)
+
+    def totalReturn(self):
+        # ACT/360 by default
+        return -(self.maturityDate - self.settleDate).days / 360.0 * self.refYield / 100.0 * self.amount
+
+
 class DepoTrade(Trade):
     def __init__(self, book, trader, tradeDateTime, amount, rtn, maturityDate, instCode='IBDP', dcc='Act/360', settledBy='', comment='', tradeID=None):
         super(DepoTrade, self).__init__(book, trader, tradeDateTime, tradeDateTime.date(), instCode, amount, 1.0,
@@ -152,6 +163,7 @@ class DepoTrade(Trade):
         super(DepoTrade, self).expsettle(trader)
         cr = CashTrade(self.book, trader, self.maturityDate, self.value(self.maturityDate), instCode='CASH_IB', refTrade=self.tradeID, comment=u'到期收益')
         cr.toDB()
+
 
 class BondTrade(Trade):
     def __init__(self, book, trader, tradeDateTime, settleDate, instCode, amount, price, refYield, maturityDate, collateralized = False, refTrade = '', settledBy = '', comment = '', tradeID=None):

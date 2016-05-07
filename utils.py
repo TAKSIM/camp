@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
+import monthdelta
 from smtplib import SMTP_SSL as SMTP
 from email import Charset
 from email.mime.text import MIMEText
@@ -26,6 +27,7 @@ def sendmail(sender, to, subject, contents, texttype='plain'):
     finally:
         s.quit()
 
+
 def YearFrraction(dcc, startDate, endDate):
     if dcc in ['A/365', 'Act/365']:
         return (endDate-startDate).days/365.
@@ -33,6 +35,34 @@ def YearFrraction(dcc, startDate, endDate):
         return (endDate-startDate).days/365.
     else:
         return None
+
+
+def DateFwdAdj(dc, startDate, period, adj='F'):
+    p = period[-1].upper()
+    n = int(period[0:-1])
+    if p=='D':
+        d = startDate + datetime.timedelta(days=n)
+    elif p=='W':
+        d = startDate + datetime.timedelta(weeks=n)
+    elif p=='M':
+        d = startDate + monthdelta.MonthDelta(n)
+    elif p=='Y':
+        d = startDate + monthdelta.MonthDelta(12*n)
+    else:
+        return None
+    return DateAdj(dc, d, adj)
+
+
+def DateAdj(dc, d, adj):
+    if adj=='N' or dc.IsBusinessDay(d):
+        return d
+    else:
+        nd = dc.NextBusinessDay(d)
+        if adj in ['F', 'Following'] or nd.month==d.month:
+            return nd
+        else:
+            return dc.LastBusinessDay(d)
+
 
 class DateCalculator(object):
     def __init__(self, workdays, holidays):

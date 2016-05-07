@@ -2,6 +2,7 @@
 from PyQt4 import QtSql
 import datetime
 from WindPy import w
+from utils import YearFrraction
 
 
 class InstrumentBase(object):
@@ -97,6 +98,9 @@ class CashBond(InstrumentBase):
 
     def cashflows(self):
         if self.numCpnPerYear is None:  # 到期一次还本付息或零息
-            pass
+            if self.coupon is None:
+                return {self.maturityDate : 100.}
+            else:
+                return {self.maturityDate : YearFrraction(self.dcc, self.accrualDate, self.maturityDate)*self.coupon+100.}
         else:
             pass
