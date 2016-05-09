@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import hashlib
-from PyQt4 import QtSql, QtCore
+from PyQt4 import QtSql, QtCore, QtGui
 from WindPy import w
 import datetime
 from utils import YearFrraction
@@ -120,7 +120,6 @@ class CashTrade(Trade):
     def cashflows(self, asOfDate):
         if asOfDate < self.settleDate:
             return {self.settleDate : self.amount}
-
 
 class FwdCashTrade(Trade):
     def __init__(self, book, instCode, trader, tradeDateTime, settleDate, maturityDate, amount, rtn, settledBy='', comment='', tradeID=None):
